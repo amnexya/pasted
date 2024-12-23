@@ -1,0 +1,8 @@
+flask # WSGI
+flask-sqlalchemy # DB
+python-magic # File type detection
+flask-login # User session management
+flask-wtf # Form handling
+flask-bcrypt # Password hashing
+waitress # WSGI server for production
+flask-migrate # DB migrations
