@@ -4,3 +4,4 @@ package-lock.json
 package.json
 app/__pycache__
 migrations
+*.pyc

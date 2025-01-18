@@ -6,3 +6,5 @@ flask-wtf # Form handling
 flask-bcrypt # Password hashing
 waitress # WSGI server for production
 flask-migrate # DB migrations
+pymysql # MySQL driver
+boto3 # S3 SDK
