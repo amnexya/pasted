@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{filename}}</title>
+</head>
+<body>
+    {% if hash_warn is true %}
+    <p>WARNING: The SHA256 hash of your file does not match the one from when it was uploaded, your file may be corrupt/tampered with. Please take caution when downloading.</p>
+    {% endif %}
+    <h1>{{filename}}</h1>
+    {% if view is true %}
+        {% if filetype == "text" %}
+        <pre>{{file}}</pre>
+        {% elif filetype == "image" %}
+        <img src="{{url}}" alt="{{filename}}">
+        {% elif filetype == "audio" %}
+        <audio controls>
+            <source src="{{url}}" type="audio/ogg">
+            <source src="{{url}}" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        {% elif filetype == "video" %}
+        <video width="320" height="240" controls>
+            <source src="{{url}}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        {% endif %}
+    {% else %}
+    <p>Your file is too large to view, download it <a href="/{{filename}}/download">here</a>.</p>
+    {% endif %}
+</body>
+</html>
