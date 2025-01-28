@@ -5,3 +5,4 @@ package.json
 app/__pycache__
 migrations
 *.pyc
+pasted.toml
