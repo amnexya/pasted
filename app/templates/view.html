@@ -9,10 +9,16 @@
     {% if hash_warn is true %}
     <p>WARNING: The SHA256 hash of your file does not match the one from when it was uploaded, your file may be corrupt/tampered with. Please take caution when downloading.</p>
     {% endif %}
+
+    {% if size_warn is true %}
+    <p>WARNING: The file is too large for us to check if it has been tampered with, make sure to check it once downloaded.</p>
+    <p>SHA256: {{sha256}}</p>
+    {% endif %}
+
     <h1>{{filename}}</h1>
     {% if view is true %}
         {% if filetype == "text" %}
-        <pre>{{file}}</pre>
+        <pre>{{data}}</pre>
         {% elif filetype == "image" %}
         <img src="{{url}}" alt="{{filename}}">
         {% elif filetype == "audio" %}
@@ -30,5 +36,6 @@
     {% else %}
     <p>Your file is too large to view, download it <a href="/{{filename}}/download">here</a>.</p>
     {% endif %}
+    <a href="{{url}}" download="FileName">Download</a>
 </body>
 </html>
