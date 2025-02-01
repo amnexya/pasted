@@ -22,7 +22,7 @@ def upload_s3(file, filename, mime):
     print(file_hash)
 
     try:
-        response = s3_client.put_object(Body=file, Bucket="pasted", Key=filename, ChecksumSHA256=file_hash, ContentType=mime)
+        response = s3_client.put_object(Body=file, Bucket="pasted", Key=filename, ChecksumSHA256=file_hash, ContentType=mime, ContentDisposition=f"attachment; filename={filename}")
         print(response)
         return True
     except ClientError as e:
