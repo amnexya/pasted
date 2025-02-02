@@ -46,48 +46,60 @@ def paste():
         
     return "Wrong method, buddy."
 
-@app.route('/<filename>')
+@app.route('/<filename>', methods=['GET', 'POST'])
 def view(filename):
-    file = db.session.query(File).filter_by(filename=filename).first()
-    
-    if file is None:
-        return "File not found, sorry."
-
-    # Check if the file is deleted
-    if file.deleted:
-        return f"""This file has been marked for deletion, you are no longer able to view this.
-        If you need this file urgently, contact {config['admin_email']} with your filename."""
+    if request.method == 'GET':
+        file = db.session.query(File).filter_by(filename=filename).first()
         
-    view = False
+        if file is None:
+            return "File not found, sorry."
 
-    if file.mime in app.config['VIEWABLE_FILE_TYPES']:
-        view = True
+        # Check if the file is deleted
+        if file.deleted:
+            return f"""This file has been marked for deletion, you are no longer able to view this.
+            If you need this file urgently, contact {config['admin_email']} with your filename."""
+            
+        view = False
 
-    size_warn = False
-    hash_warn = False
-    # Right lets grab the file from s3
-    if file.size < config['max_view_size'] * 1024 * 1024:
-        try:
-            data = worker.get_file_from_s3(file.s3_path, file.mime)
-        except Exception as e:
-            print(e)
-            return "Error getting file, this is a bug, please report it."
-    
-        # Compare the sha256 of the file to the one in the db
-        if worker.sha256gen(data) != file.sha256:
-            hash_warn = True
-            # Set view to false as a precaution
-            view = False
-    else:
-        size_warn = True
+        if file.mime in app.config['VIEWABLE_FILE_TYPES']:
+            view = True
 
-    url = config['endpoint'] + file.s3_path
-    filetype = file.mime.split('/')[0]
+        size_warn = False
+        hash_warn = False
+        # Right lets grab the file from s3
+        if file.size < config['max_view_size'] * 1024 * 1024:
+            try:
+                data = worker.get_file_from_s3(file.s3_path, file.mime)
+            except Exception as e:
+                print(e)
+                return "Error getting file, this is a bug, please report it."
+        
+            # Compare the sha256 of the file to the one in the db
+            if worker.sha256gen(data) != file.sha256:
+                hash_warn = True
+                # Set view to false as a precaution
+                view = False
+        else:
+            size_warn = True
 
-    # If the file is just text then we should passd through the contents
-    if filetype == 'text':
-        data = data.stream.read().decode('utf-8')
-    else:
-        data = None
+        url = config['endpoint'] + file.s3_path
+        filetype = file.mime.split('/')[0]
 
-    return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, url=url, view=view, hash_warn=hash_warn, filename=filename)
+        # If the file is just text then we should passd through the contents
+        if filetype == 'text':
+            data = data.stream.read().decode('utf-8')
+        else:
+            data = None
+
+        return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, url=url, view=view, hash_warn=hash_warn, filename=filename)
+    elif request.method == 'POST':
+        file = db.session.query(File).filter_by(filename=filename).first()
+        if file is None:
+            return "File not found, sorry."
+        
+        if request.form['mgmt'] == file.mgmt:
+            file.deleted = True
+            db.session.commit()
+            return "File marked for deletion."
+        else:
+            return "Management token incorrect."

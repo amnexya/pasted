@@ -1,4 +1,4 @@
-from app import s3, s3_client, config, db
+from app import s3_client, config, db
 from app.models import File
 from botocore.exceptions import ClientError
 import random
