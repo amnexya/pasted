@@ -9,3 +9,4 @@ flask-migrate # DB migrations
 pymysql # MySQL driver
 boto3 # S3 SDK
 requests # HTTP requests
+bcrypt # Password hashing
