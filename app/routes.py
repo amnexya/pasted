@@ -33,7 +33,7 @@ def paste():
                                    datetime.datetime.now(), 
                                    filename, 
                                    user, 
-                                   mgmt,
+                                   worker.generate_mgmt_hash(mgmt), # Hash mgmt token
                                    filesize,
                                    mime,
                                    worker.sha256gen(request.files['file']),
@@ -92,12 +92,13 @@ def view(filename):
             data = None
 
         return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, url=url, view=view, hash_warn=hash_warn, filename=filename)
+   
     elif request.method == 'POST':
         file = db.session.query(File).filter_by(filename=filename).first()
         if file is None:
             return "File not found, sorry."
         
-        if request.form['mgmt'] == file.mgmt:
+        if worker.check_mgmt_hash(request.form['mgmt'], file.mgmt):
             file.deleted = True
             db.session.commit()
             return "File marked for deletion."
