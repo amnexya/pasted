@@ -8,6 +8,9 @@ class User(db.Model):
     pass_hash = db.Column(db.String(128), nullable=False)
     admin = db.Column(db.Boolean, nullable=False)
     premium = db.Column(db.Boolean, nullable=False)
+    banned = db.Column(db.Boolean, nullable=False)
+    ban_end = db.Column(db.DateTime, nullable=True)
+    files = db.relationship('File', backref='user', lazy=True)
 
     def __repr__(self):
         return f"<User {self.id}>"
