@@ -73,7 +73,10 @@ file_view_templates = {'image': '<img src="{{url}}" alt="{{filename}}">',
 
 app = Flask(__name__)
 
+# Database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = config['database_uri']
+
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['VIEWABLE_FILE_TYPES'] = ['image/png',
                                      'image/jpeg',

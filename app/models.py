@@ -22,7 +22,7 @@ class File(db.Model):
     ip = db.Column(db.String(15), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
     filename = db.Column(db.String(256), nullable=False)
-    user = db.Column(db.String(256), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     mgmt = db.Column(db.String(64), nullable=False)
     size = db.Column(db.Integer, nullable=False)
     mime = db.Column(db.String(256), nullable=False)
