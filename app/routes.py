@@ -2,7 +2,7 @@ from app import app, db, worker, config, file_view_templates
 from flask import render_template, request, redirect, url_for, flash
 import datetime
 import os
-from app.models import File, User
+from app.models import File
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
