@@ -1,5 +1,5 @@
 from app import app, db, worker, config, file_view_templates
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, flash
 import datetime
 import os
 from app.models import File, User
@@ -21,8 +21,6 @@ def paste():
             filesize = request.files['file'].seek(0, os.SEEK_END)
             request.files['file'].seek(0)
 
-            user = None
-
             # We will upload the file to s3 before we add it to the db,
             # I dont really care if we have files in s3 that are not in the db.
             # TODO: Set up a cleanup service on s3 to clean stuff that isn't in the db.
@@ -32,14 +30,13 @@ def paste():
                                    request.remote_addr, 
                                    datetime.datetime.now(), 
                                    filename, 
-                                   user, 
-                                   worker.generate_mgmt_hash(mgmt), # Hash mgmt token
+                                   worker.generate_hash(mgmt), # Hash mgmt token
                                    filesize,
                                    mime,
                                    worker.sha256gen(request.files['file']),
                                    False)
 
-            return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host, user=user)
+            return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
         except Exception as e:
             print(e)
             return "nope"
@@ -57,7 +54,7 @@ def view(filename):
         # Check if the file is deleted
         if file.deleted:
             return f"""This file has been marked for deletion, you are no longer able to view this.
-            If you need this file urgently, contact {config['admin_email']} with your filename."""
+            If you need this file urgently, contact {config['site_admin']} with your filename."""
             
         view = False
 
@@ -85,7 +82,7 @@ def view(filename):
         url = config['endpoint'] + file.s3_path
         filetype = file.mime.split('/')[0]
 
-        # If the file is just text then we should passd through the contents
+        # If the file is just text then we should pass through the contents
         if filetype == 'text':
             data = data.stream.read().decode('utf-8')
         else:
@@ -95,12 +92,15 @@ def view(filename):
    
     elif request.method == 'POST':
         file = db.session.query(File).filter_by(filename=filename).first()
-        if file is None:
+
+        # If it doesnt exist or its marked for deletion, say its not found.
+        if file is None or file.deleted:
             return "File not found, sorry."
         
-        if worker.check_mgmt_hash(request.form['mgmt'], file.mgmt):
+        if worker.check_hash(request.form['mgmt'], file.mgmt):
             file.deleted = True
             db.session.commit()
             return "File marked for deletion."
+        
         else:
             return "Management token incorrect."

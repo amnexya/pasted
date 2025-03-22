@@ -113,11 +113,11 @@ def get_file_from_s3(s3_path, mime):
         print(e)
         return None
     
-def generate_mgmt_hash(mgmt):
-    return bcrypt.hashpw(mgmt.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+def generate_hash(str_hash):
+    return bcrypt.hashpw(str_hash.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-def check_mgmt_hash(mgmt, hashed):
-    return bcrypt.checkpw(mgmt.encode('utf-8'), hashed.encode('utf-8'))
+def check_hash(str_hash, hashed):
+    return bcrypt.checkpw(str_hash.encode('utf-8'), hashed.encode('utf-8'))
 
 def name_randomiser():
     """Create a random name for a file.
