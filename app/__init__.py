@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import tomllib
 import os
 import boto3
-import logging
 
 @dataclass
 class Colours:
@@ -91,4 +90,4 @@ app.config['VIEWABLE_FILE_TYPES'] = ['image/png',
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from app import routes, models
+from app import routes, models  # noqa: E402, F401
