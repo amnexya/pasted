@@ -1,5 +1,6 @@
 from app import app, db, worker, config
 from flask import render_template, request
+from werkzeug.exceptions import RequestEntityTooLarge
 import datetime
 import os
 from app.models import File
@@ -24,7 +25,6 @@ def paste():
 
             # We will upload the file to s3 before we add it to the db,
             # I dont really care if we have files in s3 that are not in the db.
-            # TODO: Set up a cleanup service on s3 to clean stuff that isn't in the db.
             worker.upload_s3(request.files['file'], filename, mime)
 
             worker.create_db_entry(s3_path, 
@@ -38,9 +38,8 @@ def paste():
                                    False)
 
             return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
-        except Exception as e:
-            print(e)
-            return "nope"
+        except RequestEntityTooLarge:
+            return "File too large, max size is 128MB. <a href='/'>Go back</a>."
         
     return "Wrong method, use a POST request for this route."
 
@@ -50,12 +49,12 @@ def view(filename):
         file = db.session.query(File).filter_by(filename=filename).first()
         
         if file is None:
-            return "File not found, sorry."
+            return "File not found, sorry. <a href='/'>Go back</a>.", 404
 
         # Check if the file is deleted
         if file.deleted:
             return f"""This file has been marked for deletion, you are no longer able to view this.
-            If you need this file urgently, contact {config['site_admin']} with your filename."""
+            If you need this file urgently, contact {config['site_admin']} with your filename. <a href='/'>Go back</a>.""", 404
             
         view = False
 
