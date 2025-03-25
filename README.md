@@ -13,5 +13,8 @@ It is an easy to use temporary file-hosting and pastebin platform.
 - No registration required
 - Minimal user info collection
 
+## Need help?
+Feel free to email me at pasted@amnexya.com! I'll be happy to help you out.
+
 ## License
-pasted.sh uses the MIT license, you can see that [here](LICENSE)
+pasted.sh is free software, and uses the MIT license, you can see that [here](LICENSE).
