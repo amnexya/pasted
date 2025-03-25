@@ -1,7 +1,17 @@
 ![pasted.sh](app/static/img/pastedlogo.png)
 
-This is the repository storing code for pasted.sh.
+This is the code for pasted.sh!
 
-An actual README will come later, along with documentation :3
+## What is pasted.sh?
+It is an easy to use temporary file-hosting and pastebin platform.
 
-NOTE: This repo is gonna be very messy till things go into prod, be warned!!!
+## Features
+- Easy to use in CLI
+  - `curl -F'file=@foo.txt' https://pasted.sh/paste`
+- Supports ShareX
+- Minimal but modern UI
+- No registration required
+- Minimal user info collection
+
+## License
+pasted.sh uses the MIT license, you can see that [here](LICENSE)
