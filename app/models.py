@@ -16,3 +16,13 @@ class File(db.Model):
 
     def __repr__(self):
         return f"<File {self.id}>"
+    
+class Quote(db.Model):
+    __tablename__ = 'quotes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    quote = db.Column(db.String(256), nullable=False)
+    author = db.Column(db.String(64), nullable=False)
+
+    def __repr__(self):
+        return f"<Quote {self.id}>"

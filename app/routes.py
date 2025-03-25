@@ -1,4 +1,4 @@
-from app import app, db, worker, config, file_view_templates
+from app import app, db, worker, config
 from flask import render_template, request, redirect, url_for, flash
 import datetime
 import os
@@ -6,6 +6,7 @@ from app.models import File
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    
     return render_template('index.html')
 
 @app.route('/paste', methods=['GET', 'POST'])
@@ -95,12 +96,12 @@ def view(filename):
 
         # If it doesnt exist or its marked for deletion, say its not found.
         if file is None or file.deleted:
-            return "File not found, sorry."
+            return "File not found, sorry.", 404
         
         if worker.check_hash(request.form['mgmt'], file.mgmt):
             file.deleted = True
             db.session.commit()
-            return "File marked for deletion."
+            return "File marked for deletion.", 200
         
         else:
-            return "Management token incorrect."
+            return "Management token incorrect.", 401

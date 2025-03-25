@@ -20,7 +20,7 @@
         {% if filetype == "text" %}
         <pre>{{data}}</pre>
         {% elif filetype == "image" %}
-        <img src="{{url}}" alt="{{filename}}">
+        <img src="{{url}}" width="800px" alt="{{filename}}">
         {% elif filetype == "audio" %}
         <audio controls>
             <source src="{{url}}" type="audio/ogg">
@@ -28,13 +28,13 @@
             Your browser does not support the audio element.
         </audio>
         {% elif filetype == "video" %}
-        <video width="320" height="240" controls>
+        <video width="800px" controls>
             <source src="{{url}}" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         {% endif %}
     {% else %}
-    <p>Your file is too large to view, download it <a href="/{{filename}}/download">here</a>.</p>
+    <p>Your file is too large to view, download it <a href="{{url}}" download="FileName">here</a>.</p>
     {% endif %}
     <a href="{{url}}" download="FileName">Download</a>
 </body>

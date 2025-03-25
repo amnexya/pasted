@@ -64,13 +64,6 @@ print(f"{Colours.green}[INFO] {Colours.endc}S3 Client started.")
 
 print(f"{Colours.green}[INFO] {Colours.endc}Starting WSGI...")
 
-# HTML to insert for file viewing.
-file_view_templates = {'image': '<img src="{{url}}" alt="{{filename}}">',
-                       'audio': '<audio controls><source src="{{url}}" type="{{mime}}"></audio>',
-                       'video': '<video controls><source src="{{url}}" type="{{mime}}"></video>',
-                       'text': '<iframe src="{{url}}" title="{{filename}}"></iframe>',
-                       'application': '<iframe src="{{url}}" title="{{filename}}"></iframe>'}
-
 app = Flask(__name__)
 
 # Database URI

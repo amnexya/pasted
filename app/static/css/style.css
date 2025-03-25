@@ -1,0 +1,37 @@
+@font-face {
+    font-family: "Montserrat";
+    src: url("/static/ttf/Montserrat-VariableFont_wght.ttf");
+}
+
+html {
+    font-family: "Montserrat", sans-serif;
+    background-image: url(/static/img/bgtile.png);
+    background-repeat: repeat;
+    background-size: 32px;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    font-size: 16px;
+}
+
+.centre {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    width: 75%;
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.quote {
+    font-style: italic;
+    font-size: 20px;
+}

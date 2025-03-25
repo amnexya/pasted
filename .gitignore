@@ -2,7 +2,8 @@
 node_modules
 package-lock.json
 package.json
-app/__pycache__
+*/__pycache__
 migrations
+instance
 *.pyc
 pasted.toml

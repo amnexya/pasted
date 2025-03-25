@@ -30,13 +30,13 @@ def upload_s3(file, filename, mime):
         print(e)
         return False 
     
-def create_db_entry(s3_path, ip, date, filename, user, mgmt, size, mime, sha256, deleted):
+def create_db_entry(s3_path, ip, date, filename, mgmt, size, mime, sha256, deleted):
     """
     Create a new file entry in the db.
     Returns True if successful, False otherwise and prints log.
     """
     try:
-        new_file = File(s3_path=s3_path, ip=ip, date=date, filename=filename, user=user, mgmt=mgmt, size=size, mime=mime, sha256=sha256, deleted=deleted)
+        new_file = File(s3_path=s3_path, ip=ip, date=date, filename=filename, mgmt=mgmt, size=size, mime=mime, sha256=sha256, deleted=deleted)
         db.session.add(new_file)
         db.session.commit()
         return True
@@ -126,3 +126,7 @@ def name_randomiser():
         str: Random filename.
     """
     return ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=4))
+
+def get_quote_from_db():
+    quote = db.session.query(Quote).filter_by(id=random.randint(1, db.session.query(Quote).count())).first()
+    return quote.text, quote.author

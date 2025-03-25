@@ -3,14 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css">
     <title>pasted.sh</title>
 </head>
 <body>
-    <p>pasted.sh</p>
-    <form action="/paste" method="post" enctype="multipart/form-data">
-        <!-- Upload file -->
-        <input type="file" name="file" id="file">
-        <button type="submit">Upload</button>
-    </form>
+    <div class="centre">
+        <img src="/static/img/pastedlogo.png" alt="pasted.sh" width="300px">
+
+        <form action="/paste" method="post" enctype="multipart/form-data">
+            <!-- Upload file -->
+            <input type="file" name="file" id="file">
+            <button type="submit">Upload</button>
+        </form>
+
+        <p>Max file size: 128mb</p>
+        <p>Files are deleted 14 days after publishing.</p>
+
+        <p>"{{quote}}" - {{quote_author}}</p>
+    </div>
 </body>
 </html>
