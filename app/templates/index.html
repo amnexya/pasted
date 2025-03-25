@@ -1,14 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/style.css">
-    <title>pasted.sh</title>
-</head>
-<body>
+{% extends "template.html" %}
+
+{% block content %}
     <div class="centre">
         <img src="/static/img/pastedlogo.png" alt="pasted.sh" width="300px">
+        <p class="subtext">Read the <a href="/faq">FAQ</a>!</p>
 
         <form action="/paste" method="post" enctype="multipart/form-data">
             <!-- Upload file -->
@@ -17,9 +12,8 @@
         </form>
 
         <p>Max file size: 128mb</p>
-        <p>Files are deleted 14 days after publishing.</p>
+        <p>Files are deleted 14 days after uploading.</p>
 
-        <p>"{{quote}}" - {{quote_author}}</p>
+        <p class="subtext"><i>"{{quote}}" - {{quote_author}}</i></p>
     </div>
-</body>
-</html>
+{% endblock %}

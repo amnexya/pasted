@@ -1,5 +1,5 @@
 from app import s3_client, config, db
-from app.models import File
+from app.models import File, Quote
 from botocore.exceptions import ClientError
 import random
 import hashlib
@@ -128,5 +128,8 @@ def name_randomiser():
     return ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=4))
 
 def get_quote_from_db():
-    quote = db.session.query(Quote).filter_by(id=random.randint(1, db.session.query(Quote).count())).first()
-    return quote.text, quote.author
+    try:
+        quote = db.session.query(Quote).filter_by(id=random.randint(1, db.session.query(Quote).count())).first()
+        return quote.quote, quote.author
+    except ValueError:
+        return "the quotes broke, i need to fix that!", "amnexya"

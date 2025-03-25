@@ -6,8 +6,8 @@ from app.models import File
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    
-    return render_template('index.html')
+    quote, quote_author = worker.get_quote_from_db()
+    return render_template('index.html', title='home', quote=quote, quote_author=quote_author)
 
 @app.route('/paste', methods=['GET', 'POST'])
 def paste():
@@ -42,7 +42,7 @@ def paste():
             print(e)
             return "nope"
         
-    return "Wrong method, buddy."
+    return "Wrong method, use a POST request for this route."
 
 @app.route('/<filename>', methods=['GET', 'POST'])
 def view(filename):
@@ -89,7 +89,7 @@ def view(filename):
         else:
             data = None
 
-        return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, url=url, view=view, hash_warn=hash_warn, filename=filename)
+        return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
    
     elif request.method == 'POST':
         file = db.session.query(File).filter_by(filename=filename).first()
@@ -105,3 +105,17 @@ def view(filename):
         
         else:
             return "Management token incorrect.", 401
+        
+### Render-Only Routes below ###
+
+@app.route('/faq')
+def faq():
+    return render_template('faq.html', title='faq')
+
+@app.route('/tos')
+def tos():
+    return render_template('tos.html', title='ToS')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html', title='Privacy Policy')

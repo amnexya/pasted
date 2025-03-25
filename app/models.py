@@ -5,7 +5,7 @@ class File(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     s3_path = db.Column(db.String(256), nullable=False)
-    ip = db.Column(db.String(15), nullable=False)
+    ip = db.Column(db.String(15), nullable=True)
     date = db.Column(db.DateTime, nullable=False)
     filename = db.Column(db.String(256), nullable=False)
     mgmt = db.Column(db.String(64), nullable=False)

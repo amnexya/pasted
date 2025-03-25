@@ -1,14 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Uploaded - pasted.sh</title>
-</head>
-<body>
+{% extends 'template.html' %}
+{% block content %}
+<div class="centre">
     <h1>Your file was uploaded successfully!</h1>
-    <p>Your url is <a>https://{{host}}/{{filename}}</a></p>
+    <p>Your url is <a href="https://{{host}}/{{filename}}">https://{{host}}/{{filename}}</a></p>
     <p>Your management token is {{mgmt}}, you will need this to manage your file.</p>
     <h3>Thanks for using {{host}}!</h3>
-</body>
-</html>
+    <a href="/">pasted.sh</a>
+</div>
+{% endblock %}

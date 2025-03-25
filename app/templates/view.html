@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{filename}}</title>
-</head>
-<body>
+{% extends "template.html" %}
+{% block content %}
+<div class="centre">
     {% if hash_warn is true %}
     <p>WARNING: The SHA256 hash of your file does not match the one from when it was uploaded, your file may be corrupt/tampered with. Please take caution when downloading.</p>
     {% endif %}
@@ -37,5 +32,7 @@
     <p>Your file is too large to view, download it <a href="{{url}}" download="FileName">here</a>.</p>
     {% endif %}
     <a href="{{url}}" download="FileName">Download</a>
-</body>
-</html>
+
+    <a href="/">pasted.sh</a>
+</div>
+{% endblock %}
