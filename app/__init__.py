@@ -91,6 +91,6 @@ app.config['VIEWABLE_FILE_TYPES'] = ['image/png',
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-app.wsgi_app = ProxyFix(app.wsgi_app)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 from app import routes, models  # noqa: E402, F401
