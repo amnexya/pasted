@@ -84,10 +84,10 @@ def view(filename):
 
         # If the file is just text then we should pass through the contents
         if filetype == 'text':
-            try: # if this fails we try and use latin-1 (ASCII)
+            try: # if this fails, chances are whatever they uploaded is buggered, just tell them to download it.
                 data = data.stream.read().decode('utf-8')
             except UnicodeDecodeError:
-                data = data.stream.read().decode('latin-1')
+                data = "We've encountered a bug and can't display your file, please download it and try it in a text editor instead."
         else:
             data = None
 
