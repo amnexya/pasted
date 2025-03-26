@@ -84,7 +84,10 @@ def view(filename):
 
         # If the file is just text then we should pass through the contents
         if filetype == 'text':
-            data = data.stream.read().decode('utf-8')
+            try: # if this fails we use smth else
+                data = data.stream.read().decode('utf-8')
+            except UnicodeDecodeError:
+                data = data.stream.read()
         else:
             data = None
 
