@@ -1,13 +1,14 @@
 from app import app, db, worker, config
-from flask import render_template, request, redirect, url_for, flash
+from flask import render_template, request
+from werkzeug.exceptions import RequestEntityTooLarge
 import datetime
 import os
 from app.models import File
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    
-    return render_template('index.html')
+    quote, quote_author = worker.get_quote_from_db()
+    return render_template('index.html', title='home', quote=quote, quote_author=quote_author)
 
 @app.route('/paste', methods=['GET', 'POST'])
 def paste():
@@ -24,7 +25,6 @@ def paste():
 
             # We will upload the file to s3 before we add it to the db,
             # I dont really care if we have files in s3 that are not in the db.
-            # TODO: Set up a cleanup service on s3 to clean stuff that isn't in the db.
             worker.upload_s3(request.files['file'], filename, mime)
 
             worker.create_db_entry(s3_path, 
@@ -38,11 +38,10 @@ def paste():
                                    False)
 
             return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
-        except Exception as e:
-            print(e)
-            return "nope"
+        except RequestEntityTooLarge:
+            return "File too large, max size is 128MB. <a href='/'>Go back</a>."
         
-    return "Wrong method, buddy."
+    return "Wrong method, use a POST request for this route."
 
 @app.route('/<filename>', methods=['GET', 'POST'])
 def view(filename):
@@ -50,12 +49,12 @@ def view(filename):
         file = db.session.query(File).filter_by(filename=filename).first()
         
         if file is None:
-            return "File not found, sorry."
+            return "File not found, sorry. <a href='/'>Go back</a>.", 404
 
         # Check if the file is deleted
         if file.deleted:
             return f"""This file has been marked for deletion, you are no longer able to view this.
-            If you need this file urgently, contact {config['site_admin']} with your filename."""
+            If you need this file urgently, contact {config['site_admin']} with your filename. <a href='/'>Go back</a>.""", 404
             
         view = False
 
@@ -89,7 +88,7 @@ def view(filename):
         else:
             data = None
 
-        return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, url=url, view=view, hash_warn=hash_warn, filename=filename)
+        return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
    
     elif request.method == 'POST':
         file = db.session.query(File).filter_by(filename=filename).first()
@@ -105,3 +104,17 @@ def view(filename):
         
         else:
             return "Management token incorrect.", 401
+        
+### Render-Only Routes below ###
+
+@app.route('/faq')
+def faq():
+    return render_template('faq.html', title='faq')
+
+@app.route('/tos')
+def tos():
+    return render_template('tos.html', title='ToS')
+
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html', title='Privacy Policy')
