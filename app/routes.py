@@ -28,7 +28,7 @@ def paste():
             worker.upload_s3(request.files['file'], filename, mime)
 
             worker.create_db_entry(s3_path, 
-                                   request.remote_addr, 
+                                   request.headers.get('X-Real-IP', request.remote_addr),
                                    datetime.datetime.now(), 
                                    filename, 
                                    worker.generate_hash(mgmt), # Hash mgmt token
