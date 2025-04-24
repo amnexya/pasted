@@ -65,10 +65,14 @@ def determine_mime_and_ext(file):
     ext_list = mimetypes.guess_all_extensions(mime)
     file.seek(0)
 
-    if file.filename.find('.') != -1:
+    try:
+        if file.filename.find('.') != -1:
+            ext = file.filename.split('.')[-1]
+        else:
+            ext = ext_list[0]
+    except IndexError:
+        # Just use what they uploaded I suppose
         ext = file.filename.split('.')[-1]
-    else:
-        ext = ext_list[0]
     
     return mime, ext
 
