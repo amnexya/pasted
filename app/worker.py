@@ -72,8 +72,12 @@ def determine_mime_and_ext(file):
             ext = ext_list[0]
     except IndexError:
         # Just use what they uploaded I suppose
-        ext = file.filename.split('.')[-1]
-    
+        try:
+            ext = file.filename.split('.')[-1]
+        except IndexError:
+            # Chances are its just octet stream if its not got an ext.
+            ext = "bin"
+        
     return mime, ext
 
 def create_mgmt_token():
