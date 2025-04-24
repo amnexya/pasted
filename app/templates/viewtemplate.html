@@ -12,6 +12,7 @@
 
     {% if filetype == "image" %}
     <meta property="og:image" content="{{url}}">
+    <meta property="twitter:card" content="{{url}}">"
     {% elif filetype == "video" %}
     <meta property="og:video" content="{{url}}">
     {% elif filetype == "audio" %}
