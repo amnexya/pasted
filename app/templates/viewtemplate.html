@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <!-- Social media embeds -->
+    <meta property="og:title" content="pasted.sh - {{title}}">
+    <meta property="og:description" content="A file on pasted.sh">
+    <meta property="og:type" content="website">
+
+    {% if filetype == "image" %}
+    <meta property="og:image" content="{{url}}">
+    {% elif filetype == "video" %}
+    <meta property="og:video" content="{{url}}">
+    {% elif filetype == "audio" %}
+    <meta property="og:audio" content="{{url}}">
+    {% endif %}
+
+    <meta property="og:url" content="{{url}}">
+    <title>pasted.sh - {{title}}</title>
+</head>
+
+<body>
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
