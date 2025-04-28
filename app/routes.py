@@ -4,26 +4,36 @@ from werkzeug.exceptions import RequestEntityTooLarge
 import datetime
 import os
 from app.models import File
+import io
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     quote, quote_author = worker.get_quote_from_db()
     recent_files = worker.generate_recent_pastes()
     print(recent_files)
-    return render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files)
+    return render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files, host=request.host)
 
 @app.route('/paste', methods=['GET', 'POST'])
 def paste():
     if request.method == 'POST':    
         try:
-            
+            # Determine whether we have text or a file
+            uploaded_file = request.files.get('file')
+            uploaded_text = request.form.get('file')
+            if uploaded_file and uploaded_file.filename != '':
+                current_file = uploaded_file
+            else:
+                current_file = io.BytesIO(uploaded_text.encode('utf-8'))
+                current_file.filename = 'text.txt'  # Set a default name for the text file
+                current_file.content_type = 'text/plain'  # Set a default content type
+
             mgmt = worker.create_mgmt_token()
-            mime, ext = worker.determine_mime_and_ext(request.files['file'])
+            mime, ext = worker.determine_mime_and_ext(current_file)
             filename = worker.name_randomiser() + '.' + ext
             s3_path = "/pasted/" + filename
 
-            filesize = request.files['file'].seek(0, os.SEEK_END)
-            request.files['file'].seek(0)
+            filesize = current_file.seek(0, os.SEEK_END)
+            current_file.seek(0)
 
             if request.form.get('private'): # If it holds any value at all, we can set it to true.
                 private = True
@@ -32,7 +42,7 @@ def paste():
 
             # We will upload the file to s3 before we add it to the db,
             # I dont really care if we have files in s3 that are not in the db.
-            worker.upload_s3(request.files['file'], filename, mime)
+            worker.upload_s3(current_file, filename, mime)
 
             worker.create_db_entry(s3_path, # S3 Path
                                    request.headers.get('X-Real-IP', request.remote_addr), # IP
@@ -41,7 +51,7 @@ def paste():
                                    worker.generate_hash(mgmt), # Hash mgmt token
                                    filesize, # Size
                                    mime, # MimeType
-                                   worker.sha256gen(request.files['file']), # SHA256
+                                   worker.sha256gen(current_file), # SHA256
                                    private, # Exclude from recent
                                    False) # Deleted, always false on upload, don't change unless you want to really fuck with your users :kekw:
 

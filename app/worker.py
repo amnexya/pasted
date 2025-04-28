@@ -142,7 +142,8 @@ def get_quote_from_db():
 def generate_recent_pastes():
     try:
         # Query the db and get, lets say past 16 files uploaded, we need to check if the privacy shows listable.
-        files = db.session.query(File).filter_by(deleted=False, private=True).order_by(File.date.desc()).limit(16).all()
+        files = db.session.query(File).filter_by(deleted=False).order_by(File.date.desc()).limit(16).all()
+        print(files)
         # Create a list of files
         file_list = []
         for file in files:
@@ -151,9 +152,10 @@ def generate_recent_pastes():
             file_list.append({
                 'filename': file.filename,
                 'date': file.date,
-                'size': file.size
+                'size': round(file.size / 1024 / 1024, 2) if round(file.size / 1024 / 1024, 2) > 0.0 else round(file.size / 1024, 2),
+                'size_unit': 'MB' if round(file.size / 1024 / 1024, 2) > 0.0 else 'KB',
             })
-            if file_list.len() >= 5:
+            if file_list.__len__() >= 8:
                 break
         # Return the list of files
         return file_list

@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: "Montserrat";
+    src: url("/static/ttf/Montserrat-VariableFont_wght.ttf");
+}
+
+@theme {
+    --font-display: Montserrat, sans-serif;
+}
+

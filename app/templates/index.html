@@ -1,45 +1,79 @@
 {% extends "template.html" %}
 
 {% block content %}
-<div class="actual-centre">
-    <div class="centre">
-        <img src="/static/img/pastedlogo.png" alt="pasted.sh" width="300px">
-        <p class="subtext">Read the <a href="/faq">FAQ</a>!</p>
+<div class="flex justify-center items-center h-screen">
+    <div class="flex gap-2">
+        <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-[430px] max-w-[75%]">
+            <img src="/static/img/pastedlogo.png" alt="pasted.sh" width="300px">
+            <p class="text-gray-500 text-sm">Read the <a href="/faq">FAQ</a>!</p>
 
-        <form action="/paste" method="post" enctype="multipart/form-data">
-            <!-- Upload file -->
-            <input type="file" name="file" id="file">
-            <input type="checkbox" name="private" id="private" value="true">
-            <label for="private" style="font-size: 12px;">Exclude from "Recently Uploaded"</label>
-            <button type="submit">Upload</button>
-        </form>
+            <form action="/paste" method="post" enctype="multipart/form-data" id="paste_form">
+                <!-- Upload file -->
+                <input type="file" name="file" id="file" accept="*/*" class="bg-[#009BFF] hover:bg-[#008deb] text-white rounded-lg p-2 my-2">
+                <textarea form="paste_form" name="file" id="text" placeholder="or paste text here" class="rounded-lg p-2 my-2 overflow-x-scroll overflow-y-scroll"></textarea>
+                <br>
+                <input type="checkbox" name="private" id="private" value="true">
+                <label for="private" style="font-size: 12px;">Exclude from "Recently Uploaded"</label>
+                <br>
+                <button type="submit" class="bg-[#009BFF] hover:bg-[#008deb] text-white rounded-lg p-2 my-2">Upload</button>
+            </form>
 
-        <p>Max file size: 128mb</p>
-        <p>Files are deleted 14 days after uploading.</p>
+            <script>
+                // Script for file input, one or the other not both.
+                const fileInput = document.getElementById('file');
+                const textInput = document.getElementById('text');
 
-        <p class="subtext"><i>"{{quote}}" - {{quote_author}}</i></p>
+                fileInput.addEventListener('change', function() {
+                    if (fileInput.files.length > 0) {
+                        textInput.disabled = true;
+                        textInput.value = ''; // Clear the text input if a file is already selected
+                        textInput.classList.replace('bg-[#009BFF]', 'bg-gray-500');
+                        textInput.classList.remove('hover:bg-[#008deb]');
+                    } else {
+                        textInput.disabled = false;
+                    }
+                });
 
-        <a href="/faq">FAQ</a> | <a href="/tos">ToS</a> | <a href="/privacy">Privacy Policy</a> | <a href="https://github.com/amnexya/pasted">Source</a>
-        <p class="subtext">pasted.sh BETA</p>
-    </div>
+                textInput.addEventListener('input', function() {
+                    if (textInput.value.length > 0) {
+                        fileInput.disabled = true;
+                        fileInput.value = ''; // Clear the file input if text is already entered
+                        fileInput.classList.add('opacity-50')
+                        fileInput.classList.replace('bg-[#009BFF]', 'bg-gray-500');
+                        fileInput.classList.remove('hover:bg-[#008deb]');
+                    } else {
+                        fileInput.disabled = false;
+                    }
+                });
+            </script>
 
-    <div class="centre">
-        <h2>Recently Uploaded</h2>
-        {% if recent_files == [] %}
-            <ul>
-                <li>Hey, I think I've messed up.</li>
-                <li>Server can't seem to get the recent files it needs,</li>
-                <li>If this is a bug, I'll fix it soon,</li>
-                <li>If it's not, try refreshing the page? Maybe it'll fix itself.</li>
-                <li>- amnexya</li>
-            </ul>
-        {% else %}
-            {% for recent in recent_files %}
-            <ul>
-                <li><a href="https://pasted.sh/{{recent.filename}}">{{recent.filename}}</a> - {{recent.date}} - {{recent.size}}</li>
-            </ul>
-            {% endfor %}
-        {% endif %}
+            <p>Max file size: 128mb</p>
+            <p>Files are deleted 14 days after uploading.</p>
+
+            <p class="text-gray-500 text-sm my-2"><i>"{{quote}}" - {{quote_author}}</i></p>
+
+            <a href="/faq" class="text-blue-500 hover:text-blue-600">FAQ</a> | <a href="/tos" class="text-blue-500 hover:text-blue-600">ToS</a> | <a href="/privacy" class="text-blue-500 hover:text-blue-600">Privacy Policy</a> | <a href="https://github.com/amnexya/pasted" class="text-blue-500 hover:text-blue-600">Source</a>
+            <p class="text-gray-500 text-sm">pasted.sh v1.1.0</p>
+        </div>
+
+        <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-[350px] max-w-[75%]">
+            <h2 class="font-bold text-2xl mb-1">Recently pasted</h2>
+            {% if recent_files == [] %}
+                <ul>
+                    <li>Hey, I think I've messed up.</li>
+                    <li>Server can't seem to get the recent files it needs,</li>
+                    <li>If this is a bug, I'll fix it soon,</li>
+                    <li>If it's not, try refreshing the page? Maybe it'll fix itself.</li>
+                    <li>- amnexya</li>
+                </ul>
+            {% else %}
+                {% for recent in recent_files %}
+                <ul class="list-disc">
+                    <li><a href="https://{{host}}/{{recent.filename}}" class="text-white bg-[#009BFF] hover:bg-[#008deb] p-1 my-2 rounded-lg">{{recent.filename}}</a> - {{recent.date}} - {{recent.size}}{{recent.size_unit}}</li>
+                </ul>
+                {% endfor %}
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

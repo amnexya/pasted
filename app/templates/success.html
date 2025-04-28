@@ -1,10 +1,12 @@
 {% extends 'template.html' %}
 {% block content %}
-<div class="centre actual-centre">
-    <h1>Your file was uploaded successfully!</h1>
-    <p>Your url is <a href="https://{{host}}/{{filename}}">https://{{host}}/{{filename}}</a></p>
-    <p>Your management token is {{mgmt}}, you will need this to manage your file.</p>
-    <h3>Thanks for using {{host}}!</h3>
-    <a href="/">pasted.sh</a>
+<div class="flex justify-center items-center h-screen">
+    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-[430px] max-w-[75%]">
+        <h1 class="font-bold text-2xl">Your file was uploaded successfully!</h1>
+        <p>Your url is <a href="https://{{host}}/{{filename}}" class="text-blue-500 hover:text-blue-600">https://{{host}}/{{filename}}</a></p>
+        <p>Your management token is {{mgmt}}, you will need this to manage your file.</p>
+        <h3 class="text-xl">Thanks for using {{host}}!</h3>
+        <a href="/" class="text-blue-500 hover:text-blue-600">pasted.sh</a>
+    </div>
 </div>
 {% endblock %}

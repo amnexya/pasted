@@ -1,38 +1,42 @@
 {% extends "viewtemplate.html" %}
 {% block content %}
-<div class="centre actual-centre">
-    {% if hash_warn is true %}
-    <p>WARNING: The SHA256 hash of your file does not match the one from when it was uploaded, your file may be corrupt/tampered with. Please take caution when downloading.</p>
-    {% endif %}
-
-    {% if size_warn is true %}
-    <p>WARNING: The file is too large for us to check if it has been tampered with, make sure to check it once downloaded.</p>
-    <p>SHA256: {{sha256}}</p>
-    {% endif %}
-
-    <h1>{{filename}}</h1>
-    {% if view is true %}
-        {% if filetype == "text" %}
-        <pre>{{data}}</pre>
-        {% elif filetype == "image" %}
-        <img src="{{url}}" width="800px" alt="{{filename}}">
-        {% elif filetype == "audio" %}
-        <audio controls>
-            <source src="{{url}}" type="audio/ogg">
-            <source src="{{url}}" type="audio/mpeg">
-            Your browser does not support the audio element.
-        </audio>
-        {% elif filetype == "video" %}
-        <video width="800px" controls>
-            <source src="{{url}}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+<div class="flex justify-center items-center h-screen">
+    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-[30%] max-w-[75%]">
+        {% if hash_warn is true %}
+        <p class="bg-yellow-400 p-2 rounded-lg mb-2">WARNING: The SHA256 hash of your file does not match the one from when it was uploaded, your file may be corrupt/tampered with. Please take caution when downloading.</p>
         {% endif %}
-    {% else %}
-    <p>Your file is too large to view, download it <a href="{{url}}" download="FileName">here</a>.</p>
-    {% endif %}
-    <a href="{{url}}" download="FileName">Download</a>
 
-    <a href="/">pasted.sh</a>
+        {% if size_warn is true %}
+        <div class="bg-yellow-400 p-2 rounded-lg mb-2">
+            <p>WARNING: The file is too large for us to check if it has been tampered with, make sure to check it once downloaded.</p>
+            <p>SHA256: {{sha256}}</p>
+        </div>
+        {% endif %}
+
+        <h1 class="text-2xl font-bold">{{filename}}</h1>
+        {% if view is true %}
+            {% if filetype == "text" %}
+            <pre class="font-mono">{{data}}</pre>
+            {% elif filetype == "image" %}
+            <img src="{{url}}" width="800px" alt="{{filename}}" class="rounded-lg">
+            {% elif filetype == "audio" %}
+            <audio controls>
+                <source src="{{url}}" type="audio/ogg">
+                <source src="{{url}}" type="audio/mpeg">
+                Your browser does not support the audio element. Download the file instead.
+            </audio>
+            {% elif filetype == "video" %}
+            <video width="800px" controls>
+                <source src="{{url}}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            {% endif %}
+        {% else %}
+        <p>Your file is too large to view, download it <a href="{{url}}" download="FileName" class="text-blue-500 hover:text-blue-600">here</a>.</p>
+        {% endif %}
+        <a href="{{url}}" download="FileName" class="text-blue-500 hover:text-blue-600">Download</a>
+        <br>
+        <a href="/" class="text-blue-500 hover:text-blue-600">pasted.sh</a>
+    </div>
 </div>
 {% endblock %}
