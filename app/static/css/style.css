@@ -10,7 +10,6 @@
     --color-yellow-400: oklch(85.2% 0.199 91.936);
     --color-blue-500: oklch(62.3% 0.214 259.815);
     --color-blue-600: oklch(54.6% 0.245 262.881);
-    --color-gray-400: oklch(70.7% 0.022 261.325);
     --color-gray-500: oklch(55.1% 0.027 264.364);
     --color-white: #fff;
     --spacing: 0.25rem;
@@ -175,6 +174,9 @@
 @layer utilities {
   .fixed {
     position: fixed;
+  }
+  .m-2 {
+    margin: calc(var(--spacing) * 2);
   }
   .my-2 {
     margin-block: calc(var(--spacing) * 2);
