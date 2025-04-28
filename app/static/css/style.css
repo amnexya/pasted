@@ -173,6 +173,9 @@
   }
 }
 @layer utilities {
+  .fixed {
+    position: fixed;
+  }
   .my-2 {
     margin-block: calc(var(--spacing) * 2);
   }
