@@ -218,6 +218,9 @@
   .list-disc {
     list-style-type: disc;
   }
+  .flex-col {
+    flex-direction: column;
+  }
   .items-center {
     align-items: center;
   }
@@ -327,6 +330,11 @@
       @media (hover: hover) {
         color: var(--color-blue-600);
       }
+    }
+  }
+  .md\:flex-row {
+    @media (width >= 48rem) {
+      flex-direction: row;
     }
   }
 }
