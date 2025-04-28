@@ -1,7 +1,7 @@
 {% extends "viewtemplate.html" %}
 {% block content %}
 <div class="flex justify-center items-center h-screen">
-    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-[30%] max-w-[75%]">
+    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-[30%] max-w-[75%] max-h-screen overflow-y-auto">
         {% if hash_warn is true %}
         <p class="bg-yellow-400 p-2 rounded-lg mb-2">WARNING: The SHA256 hash of your file does not match the one from when it was uploaded, your file may be corrupt/tampered with. Please take caution when downloading.</p>
         {% endif %}

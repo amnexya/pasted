@@ -197,6 +197,9 @@
   .h-screen {
     height: 100vh;
   }
+  .max-h-screen {
+    max-height: 100vh;
+  }
   .w-min {
     width: min-content;
   }
@@ -226,6 +229,9 @@
   }
   .overflow-x-scroll {
     overflow-x: scroll;
+  }
+  .overflow-y-auto {
+    overflow-y: auto;
   }
   .overflow-y-scroll {
     overflow-y: scroll;
