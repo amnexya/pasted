@@ -23,15 +23,23 @@ p {
     background-color: white;
     border-radius: 10px;
     padding: 16px;
-    max-width: 75%;
-    min-width: 30%;
-    margin: 0;
-    position: absolute;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    width: 100%; /* Allow blocks to take full width */
+}
+
+.actual-centre {
+    position: absolute; /* Center it using absolute positioning */
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    max-height: 90vh;
-    overflow-y: auto;
+    transform: translate(-50%, -50%); /* Perfect center */
+    width: auto; /* Set width to make sure it's responsive */
+    max-width: 75%; /* Max width of the container */
+    min-width: 30%; /* Min width of the container */
+    max-height: 90vh; /* Max height of the container */
+    display: flex; /* Use flexbox to arrange children side by side */
+    justify-content: space-between; /* Space the columns apart */
+    gap: 20px; /* Space between the columns */
 }
 
 .quote {

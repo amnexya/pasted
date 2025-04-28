@@ -1,6 +1,7 @@
 {% extends "template.html" %}
 
 {% block content %}
+<div class="actual-centre">
     <div class="centre">
         <img src="/static/img/pastedlogo.png" alt="pasted.sh" width="300px">
         <p class="subtext">Read the <a href="/faq">FAQ</a>!</p>
@@ -8,6 +9,8 @@
         <form action="/paste" method="post" enctype="multipart/form-data">
             <!-- Upload file -->
             <input type="file" name="file" id="file">
+            <input type="checkbox" name="private" id="private" value="true">
+            <label for="private" style="font-size: 12px;">Exclude from "Recently Uploaded"</label>
             <button type="submit">Upload</button>
         </form>
 
@@ -19,4 +22,24 @@
         <a href="/faq">FAQ</a> | <a href="/tos">ToS</a> | <a href="/privacy">Privacy Policy</a> | <a href="https://github.com/amnexya/pasted">Source</a>
         <p class="subtext">pasted.sh BETA</p>
     </div>
+
+    <div class="centre">
+        <h2>Recently Uploaded</h2>
+        {% if recent_files == [] %}
+            <ul>
+                <li>Hey, I think I've messed up.</li>
+                <li>Server can't seem to get the recent files it needs,</li>
+                <li>If this is a bug, I'll fix it soon,</li>
+                <li>If it's not, try refreshing the page? Maybe it'll fix itself.</li>
+                <li>- amnexya</li>
+            </ul>
+        {% else %}
+            {% for recent in recent_files %}
+            <ul>
+                <li><a href="https://pasted.sh/{{recent.filename}}">{{recent.filename}}</a> - {{recent.date}} - {{recent.size}}</li>
+            </ul>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

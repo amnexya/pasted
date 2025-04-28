@@ -8,7 +8,9 @@ from app.models import File
 @app.route('/', methods=['GET', 'POST'])
 def index():
     quote, quote_author = worker.get_quote_from_db()
-    return render_template('index.html', title='home', quote=quote, quote_author=quote_author)
+    recent_files = worker.generate_recent_pastes()
+    print(recent_files)
+    return render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files)
 
 @app.route('/paste', methods=['GET', 'POST'])
 def paste():
@@ -23,19 +25,25 @@ def paste():
             filesize = request.files['file'].seek(0, os.SEEK_END)
             request.files['file'].seek(0)
 
+            if request.form.get('private'): # If it holds any value at all, we can set it to true.
+                private = True
+            else:
+                private = False
+
             # We will upload the file to s3 before we add it to the db,
             # I dont really care if we have files in s3 that are not in the db.
             worker.upload_s3(request.files['file'], filename, mime)
 
-            worker.create_db_entry(s3_path, 
-                                   request.headers.get('X-Real-IP', request.remote_addr),
-                                   datetime.datetime.now(), 
-                                   filename, 
+            worker.create_db_entry(s3_path, # S3 Path
+                                   request.headers.get('X-Real-IP', request.remote_addr), # IP
+                                   datetime.datetime.now(), # Date
+                                   filename, # Filename
                                    worker.generate_hash(mgmt), # Hash mgmt token
-                                   filesize,
-                                   mime,
-                                   worker.sha256gen(request.files['file']),
-                                   False)
+                                   filesize, # Size
+                                   mime, # MimeType
+                                   worker.sha256gen(request.files['file']), # SHA256
+                                   private, # Exclude from recent
+                                   False) # Deleted, always false on upload, don't change unless you want to really fuck with your users :kekw:
 
             return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
         except RequestEntityTooLarge:

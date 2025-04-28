@@ -30,13 +30,13 @@ def upload_s3(file, filename, mime):
         print(e)
         return False 
     
-def create_db_entry(s3_path, ip, date, filename, mgmt, size, mime, sha256, deleted):
+def create_db_entry(s3_path, ip, date, filename, mgmt, size, mime, sha256, private, deleted):
     """
     Create a new file entry in the db.
     Returns True if successful, False otherwise and prints log.
     """
     try:
-        new_file = File(s3_path=s3_path, ip=ip, date=date, filename=filename, mgmt=mgmt, size=size, mime=mime, sha256=sha256, deleted=deleted)
+        new_file = File(s3_path=s3_path, ip=ip, date=date, filename=filename, mgmt=mgmt, size=size, mime=mime, sha256=sha256, private=private, deleted=deleted)
         db.session.add(new_file)
         db.session.commit()
         return True
@@ -138,3 +138,25 @@ def get_quote_from_db():
         return quote.quote, quote.author
     except ValueError:
         return "the quotes broke, i need to fix that!", "amnexya"
+    
+def generate_recent_pastes():
+    try:
+        # Query the db and get, lets say past 16 files uploaded, we need to check if the privacy shows listable.
+        files = db.session.query(File).filter_by(deleted=False, private=True).order_by(File.date.desc()).limit(16).all()
+        # Create a list of files
+        file_list = []
+        for file in files:
+            if file.private:
+                continue
+            file_list.append({
+                'filename': file.filename,
+                'date': file.date,
+                'size': file.size
+            })
+            if file_list.len() >= 5:
+                break
+        # Return the list of files
+        return file_list
+    except Exception as e:
+        print(e)
+        return None
