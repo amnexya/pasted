@@ -76,7 +76,13 @@ def view(filename):
             
         view = False
 
-        if file.mime in app.config['VIEWABLE_FILE_TYPES']:
+        print(file.mime)
+
+        filetype = file.mime.split('/')[0]  # Get the type of the file (e.g., text, image, audio)
+
+        # Allow for viewing of all viewable types, and add application/pdf, 
+        # fixes bugs with files not being viewable as magic was messing with mime types.
+        if filetype in ['text', 'image', 'audio', 'video'] or file.mime.startswith('application/pdf'):
             view = True
 
         size_warn = False
@@ -109,7 +115,7 @@ def view(filename):
         else:
             data = None
 
-        return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
+        return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, mime=file.mime, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
    
     elif request.method == 'POST':
         file = db.session.query(File).filter_by(filename=filename).first()

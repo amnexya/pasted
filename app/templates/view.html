@@ -16,7 +16,7 @@
         <h1 class="text-2xl font-bold">{{filename}}</h1>
         {% if view is true %}
             {% if filetype == "text" %}
-            <pre class="font-mono">{{data}}</pre>
+            <pre class="font-mono"><code>{{data}}</code></pre>
             {% elif filetype == "image" %}
             <img src="{{url}}" width="800px" alt="{{filename}}" class="rounded-lg">
             {% elif filetype == "audio" %}
@@ -30,9 +30,11 @@
                 <source src="{{url}}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
+            {% elif mime == "application/pdf" %}
+            <embed src="{{url}}" width="800px" height="600px" class="rounded-lg"></embed>
             {% endif %}
         {% else %}
-        <p>Your file is too large to view, download it <a href="{{url}}" download="FileName" class="text-blue-500 hover:text-blue-600">here</a>.</p>
+        <p>Your file is either too large to view, or we can't show it on your browser, download it <a href="{{url}}" download="FileName" class="text-blue-500 hover:text-blue-600">here</a>.</p>
         {% endif %}
         <a href="{{url}}" download="FileName" class="text-blue-500 hover:text-blue-600">Download</a>
         <br>

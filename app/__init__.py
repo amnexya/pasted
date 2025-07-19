@@ -72,22 +72,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = config['database_uri']
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = config['max_file_size'] * 1024 * 1034  # 128 MB
-app.config['VIEWABLE_FILE_TYPES'] = ['image/png',
-                                     'image/jpeg',
-                                     'image/gif',
-                                     'image/bmp', 
-                                     'image/webp', 
-                                     'image/svg+xml', 
-                                     'audio/mpeg', 
-                                     'audio/wav', 
-                                     'audio/ogg', 
-                                     'video/mp4', 
-                                     'video/webm', 
-                                     'text/plain', 
-                                     'text/html', 
-                                     'text/xml', 
-                                     'text/css', 
-                                     'application/pdf']
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
