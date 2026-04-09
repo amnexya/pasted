@@ -2,35 +2,66 @@
 
 {% block content %}
 <div class="flex justify-center items-center h-screen">
-    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 min-w-[430px] max-w-[75%] max-h-screen overflow-y-auto">
-        <h1 class="font-bold text-2xl underline"><u>Privacy Policy</u></h1>
-        <p>Last updated: 28/03/2026</p>
-        <p>This is "pasted.sh" ("we", "us", "our"). We are dedicated to protecting and respecting your privacy when using the features this website provides ("service").</p>
-        <p>Any questions or concerns about your personal information can be emailed to <a href="mailto:pasted@amnexya.com">pasted@amnexya.com</a>.</p>
-        <br>
-        <p>What information do we hold about you:</p>
-        <p>- We hold data that is automatically collected by nginx when you make a request to our server, this includes your:</p>
-        <p>- IP address</p>
-        <p>- User agent</p>
-        <p>- Referrer</p>
-        <p>This data is collected in the following cases:</p>
-        <p>- You browse any page of our service.</p>
-        <p>- You upload content to our service.</p>
-        <p>The data we hold about you is used for identification in the event of violations in the ToS, as well as debugging.</p>
-        <br>
-        <p>How we use your data:</p>
-        <p>- We use the information we hold about you allow for the blocking of web scrapers, as well as for banning users that repeatedly violate the ToS.</p>
-        <p>How do we keep your data secure:</p>
-        <p>- We have sufficient safeguards in place to ensure that unauthorised access or disclosure is highly unlikely to occur.</p>
-        <br>
-        <p>Your rights:</p>
-        <p>- You have a right to request a copy of your data, or to have all of your data that we hold removed, at any time, no questions asked. If this is the case, email <a href="mailto:pasted@amnexya.com">pasted@amnexya.com</a>.</p>
-        <br>
-        <p>Changes to this policy:</p>
-        <p>- We reserve the right to change this policy at any time, with a 48 hour notice period before any new changes come into effect.</p>
-        <br>
-        <p>Breaches of our ToS in relation to illegal material, specifically CSAM (Child Sexual Abuse Material) invalidate any rights you have under this privacy policy.</p>
-        <a href="/" class="text-blue-500 hover:text-blue-600">Home</a>
+    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <h1 class="font-bold text-3xl mb-2">Privacy Policy</h1>
+        <p class="text-gray-600 text-sm mb-6">Last updated: 09/04/2026</p>
+        
+        <p class="mb-4 text-gray-800">This is "pasted.sh" ("we", "us", "our"). We are dedicated to protecting and respecting your privacy when using the features this website provides ("service").</p>
+        <p class="mb-6 text-gray-800">Any questions or concerns about your personal information can be emailed to <a href="mailto:je@pasted.sh" class="text-blue-500 hover:text-blue-600">je@pasted.sh</a>.</p>
+
+        <hr class="my-8 border-gray-300">
+
+        <section class="mb-8">
+            <h2 class="font-bold text-xl mb-4">What information do we hold about you:</h2>
+            <div class="space-y-4 text-gray-800">
+                <div>
+                    <p class="font-semibold mb-2">We hold data that is automatically collected by Nginx when you make a request to our server, this includes your:</p>
+                    <ul class="list-disc list-inside ml-2 space-y-1">
+                        <li>IP address</li>
+                        <li>User agent</li>
+                        <li>Referrer</li>
+                        <li>Browser identification (via <code class="bg-gray-200 px-1 rounded">browserIdent</code> cookie)</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="font-semibold mb-2">This data is collected in the following cases:</p>
+                    <ul class="list-disc list-inside ml-2 space-y-1">
+                        <li>You browse any page of our service.</li>
+                        <li>You upload content to our service.</li>
+                    </ul>
+                </div>
+
+                <p>The data we hold about you is used for identification in the event of violations in the ToS, as well as debugging.</p>
+            </div>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="font-bold text-xl mb-4">How we use your data:</h2>
+            <p class="text-gray-800">We use the information we hold about you allow for the blocking of web scrapers, as well as for banning users that repeatedly violate the ToS.</p>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="font-bold text-xl mb-4">How do we keep your data secure:</h2>
+            <p class="text-gray-800">We keep your uploaded information secure by ensuring all files are encrypted both in transit and at rest.</p>
+            <p class="text-gray-800">Data inside of our database is not encrypted at rest, the only data that may be accessible in the event of a leak is your IP address.</p>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="font-bold text-xl mb-4">Your rights:</h2>
+            <p class="text-gray-800">You have a right to request a copy of your data, or to have all of your data that we hold removed, at any time, no questions asked. If this is the case, email <a href="mailto:je@pasted.sh" class="text-blue-500 hover:text-blue-600">je@pasted.sh</a>.</p>
+        </section>
+
+        <section class="mb-8">
+            <h2 class="font-bold text-xl mb-4">Changes to this policy:</h2>
+            <p class="text-gray-800">We reserve the right to change this policy at any time, with a 48 hour notice period before any new changes come into effect.</p>
+        </section>
+
+        <div class="bg-red-100 border-l-4 border-red-500 p-4 mb-6">
+            <p class="text-red-800">Breaches of our ToS in relation to CSAM (Child Sexual Abuse Material) invalidate any rights you have under this privacy policy. The content in question will be removed and reported to NCMEC, with relevant information passed onto the appropriate authorities, and your network will be blocked from accessing pasted.sh</p>
+        </div>
+
+        <a href="/" class=" text-blue-500 hover:text-blue-600">Home</a>
     </div>
 </div>
 {% endblock %}

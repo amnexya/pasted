@@ -1,6 +1,6 @@
 from app import app, db, worker, config
 from cryptography import fernet
-from flask import render_template, request, send_file
+from flask import render_template, request, send_file, make_response, redirect, url_for
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.datastructures import FileStorage
 import datetime
@@ -10,12 +10,19 @@ import io
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        return paste(api=True)
+
     quote, quote_author = worker.get_quote_from_db()
     recent_files = worker.generate_recent_pastes()
-    return render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files, host=request.host, max_file_size=config['max_file_size'], version=config['version'])
+
+    resp = make_response(render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files, host=request.host, max_file_size=config['max_file_size'], version=config['version']))
+    resp.set_cookie('browserIdent', "1")
+
+    return resp
 
 @app.route('/paste', methods=['GET', 'POST'])
-def paste():
+def paste(api=False):
     if request.method == 'POST':    
         key = fernet.Fernet(app.config['encryption_key'])
 
@@ -70,7 +77,10 @@ def paste():
 
             current_file.close()
 
-            return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
+            if api:
+                return {"mgmt": mgmt, "filename": filename}
+            else:
+                return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
         except RequestEntityTooLarge:
             return "File too large, sorry. <a href='/'>Go back</a>."
         finally:
@@ -82,6 +92,7 @@ def paste():
 @app.route('/<filename>', methods=['GET', 'POST']) # type: ignore
 def view(filename):
     if request.method == 'GET':
+        api = False if request.cookies.get('browserIdent') else True
         file = db.session.query(File).filter_by(filename=filename).first()
         key = fernet.Fernet(app.config['encryption_key'])
         
@@ -116,8 +127,10 @@ def view(filename):
             content = None
             url = f'/file/{filename}'
             
-
-        return render_template('view.html', sha256=file.sha256, content=content, size_warn=size_warn, filetype=filetype, mime=file.mime, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
+        if api:
+            return content if content else serve_file(filename)
+        else:
+            return render_template('view.html', sha256=file.sha256, content=content, size_warn=size_warn, filetype=filetype, mime=file.mime, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
    
     elif request.method == 'POST':
         file = db.session.query(File).filter_by(filename=filename).first()
@@ -157,6 +170,28 @@ def serve_file(filename):
     except Exception as e:
         print(e)
         return "Error serving file.", 500
+    
+@app.route('/delete', methods=['GET', 'POST'])
+def delete():
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        mgmt_token = request.form['mgmt_token'].strip()
+
+        print(mgmt_token)
+
+        file = db.session.query(File).filter_by(filename=name).first()
+
+        if file is None:
+            return "File not found, sorry. <a href='/delete'>Go back</a>.", 404
+        
+        if worker.check_hash(mgmt_token, file.mgmt):
+            file.deleted = True
+            db.session.commit()
+            return "File marked for deletion. <a href='/delete'>Go back</a>.", 200
+        else:
+            return "Management token incorrect. <a href='/delete'>Go back</a>.", 401
+    else:
+        return render_template('delete.html', title='manage')
         
 ### Render-Only Routes below ###
 
@@ -171,3 +206,4 @@ def tos():
 @app.route('/privacy')
 def privacy():
     return render_template('privacy.html', title='Privacy Policy')
+
