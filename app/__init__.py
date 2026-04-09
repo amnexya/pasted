@@ -2,10 +2,8 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from dataclasses import dataclass
-from werkzeug.middleware.proxy_fix import ProxyFix
 import tomllib
 import os
-import boto3
 
 @dataclass
 class Colours:
@@ -46,7 +44,6 @@ app = Flask(__name__)
 
 # Database URI
 app.config['SQLALCHEMY_DATABASE_URI'] = config['database_uri']
-
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = config['max_file_size'] * 1024 * 1024
 

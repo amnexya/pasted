@@ -4,7 +4,6 @@ class File(db.Model):
     __tablename__ = 'files'
 
     id = db.Column(db.Integer, primary_key=True) # Auto-incrementing ID
-    s3_path = db.Column(db.String(256), nullable=False) # Path to the file in S3
     ip = db.Column(db.String(15), nullable=True) # IP address of the user who uploaded the file
     date = db.Column(db.DateTime, nullable=False) # Date and time of upload
     filename = db.Column(db.String(256), nullable=False) # Filename

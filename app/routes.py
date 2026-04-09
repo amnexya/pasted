@@ -10,7 +10,6 @@ import io
 def index():
     quote, quote_author = worker.get_quote_from_db()
     recent_files = worker.generate_recent_pastes()
-    print(recent_files)
     return render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files, host=request.host)
 
 @app.route('/paste', methods=['GET', 'POST'])
@@ -20,17 +19,18 @@ def paste():
             # Determine whether we have text or a file
             uploaded_file = request.files.get('file')
             uploaded_text = request.form.get('file')
+
             if uploaded_file and uploaded_file.filename != '':
-                current_file = uploaded_file
+                worker.save_file(uploaded_file, uploaded_file.filename) # Save the file to the local storage, it'll get cleaned up if the upload fails.
+                
             else:
-                current_file = io.BytesIO(uploaded_text.encode('utf-8'))
-                current_file.filename = 'text.txt'  # Set a default name for the text file
-                current_file.content_type = 'text/plain'  # Set a default content type
+                current_file = io.BytesIO(uploaded_text.encode('utf-8'))  # type: ignore
+                current_file.filename = 'text.txt'  # Set a default name for the text file # type: ignore
+                current_file.content_type = 'text/plain'  # Set a default content type # type: ignore
 
             mgmt = worker.create_mgmt_token()
             mime, ext = worker.determine_mime_and_ext(current_file)
             filename = worker.name_randomiser() + '.' + ext
-            s3_path = "/pasted/" + filename
 
             filesize = current_file.seek(0, os.SEEK_END)
             current_file.seek(0)
@@ -40,12 +40,11 @@ def paste():
             else:
                 private = False
 
-            # We will upload the file to s3 before we add it to the db,
-            # I dont really care if we have files in s3 that are not in the db.
-            worker.upload_s3(current_file, filename, mime)
+            # We will save the file before we add it to the db,
+            # it'll get cleaned up if the upload fails.
+            worker.save_file(current_file, filename)
 
-            worker.create_db_entry(s3_path, # S3 Path
-                                   request.headers.get('X-Real-IP', request.remote_addr), # IP
+            worker.create_db_entry(request.headers.get('X-Real-IP', request.remote_addr), # IP
                                    datetime.datetime.now(), # Date
                                    filename, # Filename
                                    worker.generate_hash(mgmt), # Hash mgmt token
@@ -57,11 +56,11 @@ def paste():
 
             return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
         except RequestEntityTooLarge:
-            return "File too large, max size is 128MB. <a href='/'>Go back</a>."
+            return "File too large, sorry. <a href='/'>Go back</a>."
         
     return "Wrong method, use a POST request for this route."
 
-@app.route('/<filename>', methods=['GET', 'POST'])
+@app.route('/<filename>', methods=['GET', 'POST']) # type: ignore
 def view(filename):
     if request.method == 'GET':
         file = db.session.query(File).filter_by(filename=filename).first()
@@ -76,8 +75,6 @@ def view(filename):
             
         view = False
 
-        print(file.mime)
-
         filetype = file.mime.split('/')[0]  # Get the type of the file (e.g., text, image, audio)
 
         # Allow for viewing of all viewable types, and add application/pdf, 
@@ -87,35 +84,17 @@ def view(filename):
 
         size_warn = False
         hash_warn = False
-        # Right lets grab the file from s3
-        if file.size < config['max_view_size'] * 1024 * 1024:
-            try:
-                data = worker.get_file_from_s3(file.s3_path, file.mime)
-            except Exception as e:
-                print(e)
-                return "Error getting file, this is a bug, please report it."
-        
-            # Compare the sha256 of the file to the one in the db
-            if worker.sha256gen(data) != file.sha256:
-                hash_warn = True
-                # Set view to false as a precaution
-                view = False
-        else:
-            size_warn = True
 
-        url = config['endpoint'] + file.s3_path
-        filetype = file.mime.split('/')[0]
-
-        # If the file is just text then we should pass through the contents
+        # If it's text, we will pass the content to the template, otherwise we'll just pass the url and let the browser handle it.
         if filetype == 'text':
-            try: # if this fails, chances are whatever they uploaded is buggered, just tell them to download it.
-                data = data.stream.read().decode('utf-8')
-            except UnicodeDecodeError:
-                data = "We've encountered a bug and can't display your file, please download it and try it in a text editor instead."
+            url = None
+            with open(os.path.join(config['local_data'], filename), 'r') as f:
+                content = f.read()
         else:
-            data = None
+            content = None
+            url = config['srv_data_location'] + '/' + filename
 
-        return render_template('view.html', sha256=file.sha256, size_warn=size_warn, data=data, filetype=filetype, mime=file.mime, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
+        return render_template('view.html', sha256=file.sha256, content=content, size_warn=size_warn, filetype=filetype, mime=file.mime, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
    
     elif request.method == 'POST':
         file = db.session.query(File).filter_by(filename=filename).first()

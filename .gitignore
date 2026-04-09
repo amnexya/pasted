@@ -7,3 +7,5 @@ migrations
 instance
 *.pyc
 pasted.toml
+# for testing
+app/static/data

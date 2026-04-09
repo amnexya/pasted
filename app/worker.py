@@ -1,6 +1,5 @@
-from app import s3_client, config, db
+from app import config, db
 from app.models import File, Quote
-from botocore.exceptions import ClientError
 import random
 import hashlib
 import magic
@@ -8,35 +7,37 @@ import mimetypes
 import base64
 import os
 import bcrypt
-from werkzeug.datastructures import FileStorage
-import requests
 import io
-
-def upload_s3(file, filename, mime):
-    """
-    Upload a file to s3.
-    Returns True if successful, False otherwise and prints log.
-    """
-
-    # Get file hash
-    file_hash = sha256gen(file)
-    print(file_hash)
-
-    try:
-        response = s3_client.put_object(Body=file, Bucket="pasted", Key=filename, ChecksumSHA256=file_hash, ContentType=mime, ContentDisposition=f"attachment; filename={filename}")
-        print(response)
-        return True
-    except ClientError as e:
-        print(e)
-        return False 
     
-def create_db_entry(s3_path, ip, date, filename, mgmt, size, mime, sha256, private, deleted):
+def save_file(file, filename):
+    """Save a file to the local mount directory.
+
+    Args:
+        file (BytesIO or FileStorage): File to save.
+        filename (str): Name to save the file as.
+    """
+    # Are we working with BytesIO or FileStorage?
+    if isinstance(file, io.BytesIO):
+        with open(os.path.join(config['local_data'], filename), 'wb') as f:
+            f.write(file.getbuffer())
+    else:
+        file.save(os.path.join(config['local_data'], filename))
+
+def upload_file(file, filename, mime):
+    """Take user uploaded file and place it in local mount directory
+
+    Args:
+        file (_type_): _description_
+        filename (_type_): _description_
+        mime (_type_): _description_
+    """
+def create_db_entry(ip, date, filename, mgmt, size, mime, sha256, private, deleted):
     """
     Create a new file entry in the db.
     Returns True if successful, False otherwise and prints log.
     """
     try:
-        new_file = File(s3_path=s3_path, ip=ip, date=date, filename=filename, mgmt=mgmt, size=size, mime=mime, sha256=sha256, private=private, deleted=deleted)
+        new_file = File(ip=ip, date=date, filename=filename, mgmt=mgmt, size=size, mime=mime, sha256=sha256, private=private, deleted=deleted) # type: ignore
         db.session.add(new_file)
         db.session.commit()
         return True
@@ -56,7 +57,9 @@ def determine_mime_and_ext(file):
     """
 
     # Get MIME
+    file.seek(0)
     mime = magic.Magic(mime=True).from_buffer(file.read())
+    print(mime)
 
     # Set pointer back to 0
     file.seek(0)
@@ -93,27 +96,12 @@ def sha256gen(file):
 
     return file_hash
 
-def get_file_from_s3(s3_path, mime):
+def get_file_from_storage(filename, mime):
     try:
-        # Fetch the file using requests
-        file = requests.get(config['endpoint'] + "/" + s3_path)
-
-        # Extract the file content, filename, and content type
-        file_content = file.content
-        content_type = file.headers.get('Content-Type', 'application/octet-stream')
-        file_name = s3_path.split('/')[-1]  # Extract filename from the path
-
-        # Create a file-like object
-        file_like = io.BytesIO(file_content)
-
-        # Wrap it in a FileStorage object
-        file_storage = FileStorage(
-            stream=file_like,
-            filename=file_name,
-            content_type=content_type
-        )
-
-        return file_storage
+        with open(os.path.join(config['local_mount'], filename), 'rb') as f:
+            data = io.BytesIO(f.read())
+            data.seek(0)
+            return data
     except Exception as e:
         print(e)
         return None
@@ -135,7 +123,7 @@ def name_randomiser():
 def get_quote_from_db():
     try:
         quote = db.session.query(Quote).filter_by(id=random.randint(1, db.session.query(Quote).count())).first()
-        return quote.quote, quote.author
+        return quote.quote, quote.author # type: ignore
     except ValueError:
         return "the quotes broke, i need to fix that!", "amnexya"
     
