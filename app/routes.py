@@ -1,5 +1,6 @@
 from app import app, db, worker, config
-from flask import render_template, request
+from cryptography import fernet
+from flask import render_template, request, send_file
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.datastructures import FileStorage
 import datetime
@@ -16,6 +17,8 @@ def index():
 @app.route('/paste', methods=['GET', 'POST'])
 def paste():
     if request.method == 'POST':    
+        key = fernet.Fernet(app.config['encryption_key'])
+
         try:
             # Determine whether we have text or a file
             uploaded_file = request.files.get('file')
@@ -47,6 +50,10 @@ def paste():
             else:
                 private = False
 
+            encrypted_content = key.encrypt(current_file.read())
+            current_file = FileStorage(stream=io.BytesIO(encrypted_content), filename=current_file.filename, content_type=current_file.content_type)
+            current_file.seek(0)
+
             # We will save the file before we add it to the db,
             # it'll get cleaned up if the upload fails.
             worker.save_file(current_file, filename)
@@ -76,6 +83,7 @@ def paste():
 def view(filename):
     if request.method == 'GET':
         file = db.session.query(File).filter_by(filename=filename).first()
+        key = fernet.Fernet(app.config['encryption_key'])
         
         if file is None:
             return "File not found, sorry. <a href='/'>Go back</a>.", 404
@@ -101,10 +109,13 @@ def view(filename):
         if filetype == 'text':
             url = None
             with open(os.path.join(config['local_data'], filename), 'r') as f:
-                content = f.read()
+                encrypted = f.read().encode()
+                content = key.decrypt(encrypted)
+                content = content.decode('utf-8', errors='replace') # Just in case, we dont want the page to break if the text is not valid utf-8.
         else:
             content = None
-            url = config['srv_data_location'] + '/' + filename
+            url = f'/file/{filename}'
+            
 
         return render_template('view.html', sha256=file.sha256, content=content, size_warn=size_warn, filetype=filetype, mime=file.mime, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
    
@@ -122,6 +133,30 @@ def view(filename):
         
         else:
             return "Management token incorrect.", 401
+
+@app.route('/file/<filename>')
+def serve_file(filename):
+    """Serve encrypted files by decrypting and streaming them."""
+    file = db.session.query(File).filter_by(filename=filename).first()
+    key = fernet.Fernet(app.config['encryption_key'])
+    
+    if file is None or file.deleted:
+        return "File not found, sorry.", 404
+    
+    try:
+        with open(os.path.join(config['local_data'], filename), 'rb') as f:
+            encrypted_content = f.read()
+            decrypted_content = key.decrypt(encrypted_content)
+        
+        return send_file(
+            io.BytesIO(decrypted_content),
+            mimetype=file.mime,
+            as_attachment=False,
+            download_name=filename
+        )
+    except Exception as e:
+        print(e)
+        return "Error serving file.", 500
         
 ### Render-Only Routes below ###
 

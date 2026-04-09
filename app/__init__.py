@@ -1,9 +1,9 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from dataclasses import dataclass
-import tomllib
+from flask import Flask
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 import os
+import tomllib
 
 @dataclass
 class Colours:
@@ -38,6 +38,10 @@ print(f"{Colours.green}[INFO] {Colours.endc}Checking for local file directory...
 if not os.path.exists(config['local_data']):
     exit(f"{Colours.red}[ERROR] {Colours.endc}Local data directory not found.")
 
+print(f"{Colours.green}[INFO] {Colours.endc}Checking for key.txt...")
+if not os.path.exists("key.txt"):
+    exit(f"{Colours.red}[ERROR] {Colours.endc}key.txt not found, this file should contain a random string used for at-rest encryption, generate one with `head -c 32 /dev/urandom | base64 > key.txt`")
+
 print(f"{Colours.green}[INFO] {Colours.endc}Starting WSGI...")
 
 app = Flask(__name__)
@@ -46,6 +50,8 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = config['database_uri']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = config['max_file_size'] * 1024 * 1024
+with open("key.txt", "rb") as f:
+    app.config['encryption_key'] = f.read()
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)

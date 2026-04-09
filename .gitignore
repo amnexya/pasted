@@ -7,5 +7,6 @@ migrations
 instance
 *.pyc
 pasted.toml
+key.txt
 # for testing
 app/static/data
