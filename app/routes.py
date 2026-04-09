@@ -1,6 +1,7 @@
 from app import app, db, worker, config
 from flask import render_template, request
 from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.datastructures import FileStorage
 import datetime
 import os
 from app.models import File
@@ -10,7 +11,7 @@ import io
 def index():
     quote, quote_author = worker.get_quote_from_db()
     recent_files = worker.generate_recent_pastes()
-    return render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files, host=request.host)
+    return render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files, host=request.host, max_file_size=config['max_file_size'], version=config['version'])
 
 @app.route('/paste', methods=['GET', 'POST'])
 def paste():
@@ -20,17 +21,23 @@ def paste():
             uploaded_file = request.files.get('file')
             uploaded_text = request.form.get('file')
 
-            if uploaded_file and uploaded_file.filename != '':
-                worker.save_file(uploaded_file, uploaded_file.filename) # Save the file to the local storage, it'll get cleaned up if the upload fails.
-                
+            # Change it to a filestorage object so we can work with it the same way as uploaded files.
+            if uploaded_text:
+                current_file = FileStorage(stream=io.BytesIO(uploaded_text.encode()), filename='paste.txt', content_type='text/plain')
+
+            elif uploaded_file:
+                current_file = uploaded_file
+
             else:
-                current_file = io.BytesIO(uploaded_text.encode('utf-8'))  # type: ignore
-                current_file.filename = 'text.txt'  # Set a default name for the text file # type: ignore
-                current_file.content_type = 'text/plain'  # Set a default content type # type: ignore
+                return "No file or text provided, sorry. <a href='/'>Go back</a>.", 400
 
             mgmt = worker.create_mgmt_token()
-            mime, ext = worker.determine_mime_and_ext(current_file)
-            filename = worker.name_randomiser() + '.' + ext
+            mime = current_file.mimetype
+            ext = current_file.filename.split('.')[-1]
+
+            if ext == "":
+                ext = "bin" # Default to bin if no extension provided, just to be safe.
+            filename = worker.name_randomiser() + "." + ext # Just in case, we dont want any funny business with the filename.
 
             filesize = current_file.seek(0, os.SEEK_END)
             current_file.seek(0)
@@ -54,9 +61,14 @@ def paste():
                                    private, # Exclude from recent
                                    False) # Deleted, always false on upload, don't change unless you want to really fuck with your users :kekw:
 
+            current_file.close()
+
             return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
         except RequestEntityTooLarge:
             return "File too large, sorry. <a href='/'>Go back</a>."
+        finally:
+            if current_file:
+                current_file.close()
         
     return "Wrong method, use a POST request for this route."
 

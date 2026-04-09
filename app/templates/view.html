@@ -1,7 +1,7 @@
 {% extends "viewtemplate.html" %}
 {% block content %}
 <div class="flex justify-center items-center h-screen">
-    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-[30%] max-w-[75%] max-h-screen overflow-y-auto">
+    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 min-w-[30%] max-w-[75%] max-h-screen overflow-y-auto">
         {% if hash_warn is true %}
         <p class="bg-yellow-400 p-2 rounded-lg mb-2">WARNING: The SHA256 hash of your file does not match the one from when it was uploaded, your file may be corrupt/tampered with. Please take caution when downloading.</p>
         {% endif %}
@@ -34,11 +34,11 @@
             <embed src="{{url}}" width="800px" height="600px" class="rounded-lg"></embed>
             {% endif %}
         {% else %}
-        <p>Your file is either too large to view, or we can't show it on your browser, download it <a href="{{url}}" download="FileName" class="text-blue-500 hover:text-blue-600">here</a>.</p>
+        <p>Unfortunately, this file can't be viewed in your browser, please download it instead.</p>
         {% endif %}
-        <a href="{{url}}" download="FileName" class="text-blue-500 hover:text-blue-600">Download</a>
         <br>
-        <a href="/" class="text-blue-500 hover:text-blue-600">pasted.sh</a>
+        <a href="{{url}}" download="FileName" class="text-white hover:text-gray-100 bg-blue-500 hover:bg-blue-600 rounded-lg p-2">Download</a>
+        <a href="/" class="text-blue-500 hover:text-blue-600">Home</a>
     </div>
 </div>
 {% endblock %}

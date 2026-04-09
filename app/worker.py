@@ -44,41 +44,6 @@ def create_db_entry(ip, date, filename, mgmt, size, mime, sha256, private, delet
     except Exception as e:
         print(e)
         return False
-    
-def determine_mime_and_ext(file):
-    """Determine the MIME type and extension of a file.
-
-    Args:
-        file (FileStorage): File to determine MIME type and extension of.
-
-    Returns:
-        str: MIME type of the file.
-        str: Extension of the file.
-    """
-
-    # Get MIME
-    file.seek(0)
-    mime = magic.Magic(mime=True).from_buffer(file.read())
-    print(mime)
-
-    # Set pointer back to 0
-    file.seek(0)
-
-    # Get Extension
-    ext_list = mimetypes.guess_all_extensions(mime)
-    file.seek(0)
-
-    try:
-        if file.filename.find('.') != -1:
-            ext = file.filename.split('.')[-1]
-        else:
-            ext = ext_list[0]
-    except IndexError:
-        # Been a bug where if the file doesnt have an extension, it will use the file name as it, cant have that.
-        # Assuming its just returning a list with one value, so im just gonna set the extension to bin to play it safe.
-        ext = 'bin'
-
-    return mime, ext
 
 def create_mgmt_token():
     """Create a random management token for a file.
@@ -131,7 +96,6 @@ def generate_recent_pastes():
     try:
         # Query the db and get, lets say past 16 files uploaded, we need to check if the privacy shows listable.
         files = db.session.query(File).filter_by(deleted=False).order_by(File.date.desc()).limit(16).all()
-        print(files)
         # Create a list of files
         file_list = []
         for file in files:

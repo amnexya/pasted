@@ -51,24 +51,23 @@
                 });
             </script>
 
-            <p>Max file size: 128mb</p>
-            <p>Files are deleted 14 days after uploading.</p>
+            <p>Max file size: {{ max_file_size }}mb</p>
+            <p>Files are permanent<span class="text-gray-500 text-sm">*</span></p> 
 
             <p class="text-gray-500 text-sm my-2"><i>"{{quote}}" - {{quote_author}}</i></p>
 
-            <a href="/faq" class="text-blue-500 hover:text-blue-600">FAQ</a> | <a href="/tos" class="text-blue-500 hover:text-blue-600">ToS</a> | <a href="/privacy" class="text-blue-500 hover:text-blue-600">Privacy Policy</a> | <a href="https://github.com/amnexya/pasted" class="text-blue-500 hover:text-blue-600">Source</a>
-            <p class="text-gray-500 text-sm">pasted.sh v1.2.0</p>
+            <a href="/faq" class="text-blue-500 hover:text-blue-600">FAQ</a> | <a href="/tos" class="text-blue-500 hover:text-blue-600">ToS</a> | <a href="/privacy" class="text-blue-500 hover:text-blue-600">Privacy Policy</a> 
+            <br>
+            <span class="text-gray-500 text-sm">pasted.sh v{{ version }}</span> - <a href="https://github.com/amnexya/pasted" class="text-sm text-blue-500 hover:text-blue-600">Source</a>
+            <br>
+            <span class="text-gray-500 text-sm">* unless deleted manually or by a moderator</span>
         </div>
 
         <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-[350px] max-w-[75%]">
             <h2 class="font-bold text-2xl mb-1">Recently pasted</h2>
             {% if recent_files == [] %}
                 <ul>
-                    <li>Hey, I think I've messed up.</li>
-                    <li>Server can't seem to get the recent files it needs,</li>
-                    <li>If this is a bug, I'll fix it soon,</li>
-                    <li>If it's not, try refreshing the page? Maybe it'll fix itself.</li>
-                    <li>- amnexya</li>
+                    <li>Something broke, it'll be fixed soon.</li>
                 </ul>
             {% else %}
                 {% for recent in recent_files %}

@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="flex justify-center items-center h-screen">
-    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-107.5 max-w-[75%] max-h-screen overflow-y-auto">
+    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 min-w-107.5 max-w-[75%] max-h-screen overflow-y-auto m-8">
         <h1 class="font-bold text-2xl underline"><u>FAQ</u></h1>
         <p>Make sure you also read the <a href="/tos" class="text-blue-500 hover:text-blue-600">ToS</a> and <a href="/privacy" class="text-blue-500 hover:text-blue-600">Privacy Policy</a>,</p>
         <hr>
@@ -18,6 +18,7 @@
 
         <h2 class="text-xl mt-2">Can anyone access my data?</h2>
         <p>The files uploaded here arent private, anyone can guess the URL to anything you've uploaded, so don't upload anything you don't want the world to see.</p>
+        <p>Files are kept encrypted at rest, so if the server ends up compromised, all data should be safe.</p>
 
         <h2 class="text-xl mt-2">Do you remove anything that goes against ToS or is illegal?</h2>
         <p>If you do happen to find anything on this platform that is against ToS or is illegal, please email me about it at <a href="mailto:abuse-pasted@amnexya.com" class="text-blue-500 hover:text-blue-600">abuse-pasted@amnexya.com</a>, I'll take action and review the URL as soon as I see your email.</p>
@@ -30,7 +31,7 @@
         <h2 class="text-xl mt-2">I want to ask you something.</h2>
         <p>Email me, <a href="mailto:pasted@amnexya.com" class="text-blue-500 hover:text-blue-600">pasted@amnexya.com</a>.</p>
 
-        <a href="/" class="text-blue-500 hover:text-blue-600">pasted.sh</a>
+        <a href="/" class="text-blue-500 hover:text-blue-600">Home</a>
     </div>
 </div>
 {% endblock %}
