@@ -329,14 +329,14 @@
   .max-w-lg {
     max-width: var(--container-lg);
   }
+  .min-w-87\.5 {
+    min-width: calc(var(--spacing) * 87.5);
+  }
   .min-w-107\.5 {
     min-width: calc(var(--spacing) * 107.5);
   }
   .min-w-\[30\%\] {
     min-width: 30%;
-  }
-  .min-w-\[350px\] {
-    min-width: 350px;
   }
   .min-w-\[430px\] {
     min-width: 430px;
