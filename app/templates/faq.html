@@ -9,6 +9,19 @@
         <h2 class="text-xl mt-2">What is pasted.sh?</h2>
         <p>pasted.sh is a free-for-use file hosting and pastebin service, we allow anyone to share files, text, audio, and more with others online, without clogging up your chat with lines upon lines of text or files.</p>
         
+        <h2 class="text-xl mt-2">How do I upload from a terminal?</h2>
+        <p>Use curl. Examples below:</p>
+        <ul class="list-disc list-inside">
+            <li>To upload a file:</li>
+            <pre><code>curl -F "file=@/path/to/your/file" https://pasted.sh</code></pre> 
+            <li>To upload text:</li>
+            <pre><code>curl -F "your text here" https://pasted.sh</code></pre>
+            <li>To upload privately:</li>
+            <pre><code>curl -F "file=@/path/to/your/file" -F "private=true" https://pasted.sh</code></pre>
+            <li>To delete a file:</li>
+            <pre><code>curl -F "name=filename.txt" -F "mgmt=management_token" https://pasted.sh/delete</code></pre>
+        </ul>
+
         <h2 class="text-xl mt-2">How long do my files last for?</h2>
         <p>Your files are usually kept forever, unless my storage host dies or your files are reported for abuse.</p>
         <p>It's not advised to upload anything you don't have a backup for, as it's likely files will be purged at some point.</p>

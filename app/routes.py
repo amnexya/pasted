@@ -83,9 +83,6 @@ def paste(api=False):
                 return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
         except RequestEntityTooLarge:
             return "File too large, sorry. <a href='/'>Go back</a>."
-        finally:
-            if current_file:
-                current_file.close()
         
     return "Wrong method, use a POST request for this route."
 
@@ -140,9 +137,10 @@ def view(filename):
             return "File not found, sorry.", 404
         
         if worker.check_hash(request.form['mgmt'], file.mgmt):
-            file.deleted = True
+            db.session.delete(file)
+            os.remove(os.path.join(config['local_data'], filename))
             db.session.commit()
-            return "File marked for deletion.", 200
+            return "File deleted.", 200
         
         else:
             return "Management token incorrect.", 401
@@ -185,11 +183,12 @@ def delete():
             return "File not found, sorry. <a href='/delete'>Go back</a>.", 404
         
         if worker.check_hash(mgmt_token, file.mgmt):
-            file.deleted = True
+            db.session.delete(file)
+            os.remove(os.path.join(config['local_data'], name))
             db.session.commit()
-            return "File marked for deletion. <a href='/delete'>Go back</a>.", 200
+            return "File deleted.", 200
         else:
-            return "Management token incorrect. <a href='/delete'>Go back</a>.", 401
+            return "Management token incorrect.", 401
     else:
         return render_template('delete.html', title='manage')
         

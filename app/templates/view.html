@@ -18,7 +18,7 @@
             {% if filetype == "text" %}
             <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap">{{content}}</pre>
             {% elif filetype == "image" %}
-            <img src="{{content}}" width="800px" alt="{{filename}}" class="rounded-lg">
+            <img src="{{url}}" width="800px" alt="{{filename}}" class="rounded-lg">
             {% elif filetype == "audio" %}
             <audio controls>
                 <source src="{{url}}" type="audio/ogg">
