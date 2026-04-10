@@ -48,8 +48,8 @@ def paste(api=False):
             mime = Magic(mime=True).from_buffer(current_file.stream.read(2048))#
             current_file.stream.seek(0) # Reset the stream position after reading for magic
 
-            ext = current_file.filename.split('.')[-1]
-            
+            ext = current_file.filename.split('.')[-1] # type: ignore
+
             if ext == "":
                 ext = "bin" # Default to bin if no extension provided, just to be safe.
             filename = worker.name_randomiser() + "." + ext # Just in case, we dont want any funny business with the filename.
@@ -102,12 +102,12 @@ def view(filename):
         if file is None:
             flash("File not found, sorry.")
             return redirect(url_for("index"))
+        
+        filesize = file.size
             
         view = True
 
         filetype = file.mime.split('/')[0]  # Get the type of the file (e.g., text, image, audio)
-
-        size_warn = False
 
         # If it's text, we will pass the content to the template, otherwise we'll just pass the url and let the browser handle it.
         if filetype == 'text':
@@ -123,7 +123,7 @@ def view(filename):
         if api:
             return content if content else serve_file(filename)
         else:
-            return render_template('view.html', sha256=file.sha256, content=content, size_warn=size_warn, filetype=filetype, mime=file.mime, url=url, view=view, filename=filename, title=filename)
+            return render_template('view.html', sha256=file.sha256, content=content, filesize=filesize, filetype=filetype, mime=file.mime, url=url, view=view, filename=filename, title=filename)
 
 @app.route('/file/<filename>')
 def serve_file(filename):
@@ -132,7 +132,8 @@ def serve_file(filename):
     key = fernet.Fernet(app.config['encryption_key'])
     
     if file is None or file.deleted:
-        return "File not found, sorry.", 404
+        flash("File not found, sorry.")
+        return redirect(url_for("index"))
     
     try:
         with open(os.path.join(config['local_data'], filename), 'rb') as f:
@@ -147,7 +148,8 @@ def serve_file(filename):
         )
     except Exception as e:
         print(e)
-        return "Error serving file.", 500
+        flash("Error serving file.")
+        return redirect(url_for("index"))
     
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
@@ -160,7 +162,8 @@ def delete():
         file = db.session.query(File).filter_by(filename=name).first()
 
         if file is None:
-            return "File not found, sorry. <a href='/delete'>Go back</a>.", 404
+            flash("File not found, sorry.")
+            return redirect(url_for("index"))
         
         if worker.check_hash(mgmt_token, file.mgmt):
             db.session.delete(file)
@@ -169,7 +172,8 @@ def delete():
             flash("File deleted.")
             return redirect(url_for("index"))
         else:
-            return "Management token incorrect.", 401
+            flash("Management token incorrect.")
+            return redirect(url_for("index"))
     else:
         return render_template('delete.html', title='manage')
         
