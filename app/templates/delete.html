@@ -1,0 +1,23 @@
+{% extends "template.html" %}
+
+{% block content %}
+<div class="flex justify-center items-center h-screen">
+    <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 min-w-107.5 max-w-lg max-h-screen overflow-y-auto m-8">
+        <h1 class="font-bold text-2xl underline"><u>Delete a file</u></h1>
+        <form action="/delete" method="post" class="space-y-4 mt-4">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700">File name</label>
+                <input type="text" name="name" id="name" required class="mt-1 block w-md rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="mgmt_token" class="block text-sm font-medium text-gray-700">Management Token</label>
+                <input type="text" name="mgmt_token" id="mgmt_token" required class="mt-1 block w-md rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            </div>
+            <p class="text-gray-600 text-sm">Need help? - <a href="/faq" class="text-blue-500 hover:text-blue-600">FAQ</a></p>
+            <p class="text-gray-600 text-sm">Your management token is the one shown to you when you uploaded your file, and is required to manage your file.</p>
+            <button type="submit" class="text-white hover:text-gray-100 bg-red-500 hover:bg-red-600 rounded-lg p-2">Delete File</button>
+        </form>
+        <a href="/" class="text-blue-500 hover:text-blue-600">Home</a>
+    </div>
+</div>
+{% endblock %}
