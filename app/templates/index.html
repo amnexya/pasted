@@ -23,6 +23,14 @@
                 <a href="/delete" class="text-blue-500 hover:text-blue-600">Delete a file</a>
             </form>
 
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="bg-red-500 text-white p-2 rounded-lg my-2">{{ message|safe }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <script>
                 // Script for file input, one or the other not both.
                 const fileInput = document.getElementById('file');

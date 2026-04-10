@@ -1,8 +1,9 @@
 from app import app, db, worker, config
 from cryptography import fernet
-from flask import render_template, request, send_file, make_response, redirect, url_for
+from flask import flash, render_template, request, send_file, make_response, redirect, url_for
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.datastructures import FileStorage
+from magic import Magic
 import datetime
 import os
 from app.models import File
@@ -39,12 +40,16 @@ def paste(api=False):
                 current_file = uploaded_file
 
             else:
-                return "No file or text provided, sorry. <a href='/'>Go back</a>.", 400
+                flash("No file or text provided.")
+                return redirect(url_for('index'))
 
             mgmt = worker.create_mgmt_token()
-            mime = current_file.mimetype
-            ext = current_file.filename.split('.')[-1]
 
+            mime = Magic(mime=True).from_buffer(current_file.stream.read(2048))#
+            current_file.stream.seek(0) # Reset the stream position after reading for magic
+
+            ext = current_file.filename.split('.')[-1]
+            
             if ext == "":
                 ext = "bin" # Default to bin if no extension provided, just to be safe.
             filename = worker.name_randomiser() + "." + ext # Just in case, we dont want any funny business with the filename.
@@ -82,11 +87,12 @@ def paste(api=False):
             else:
                 return render_template('success.html', mgmt=mgmt, filename=filename, host=request.host)
         except RequestEntityTooLarge:
-            return "File too large, sorry. <a href='/'>Go back</a>."
+            flash("File too large, try something smaller.")
+            return redirect(url_for("index"))
         
     return "Wrong method, use a POST request for this route."
 
-@app.route('/<filename>', methods=['GET', 'POST']) # type: ignore
+@app.route('/<filename>') # type: ignore
 def view(filename):
     if request.method == 'GET':
         api = False if request.cookies.get('browserIdent') else True
@@ -94,30 +100,20 @@ def view(filename):
         key = fernet.Fernet(app.config['encryption_key'])
         
         if file is None:
-            return "File not found, sorry. <a href='/'>Go back</a>.", 404
-
-        # Check if the file is deleted
-        if file.deleted:
-            return f"""This file has been marked for deletion, you are no longer able to view this.
-            If you need this file urgently, contact {config['site_admin']} with your filename. <a href='/'>Go back</a>.""", 404
+            flash("File not found, sorry.")
+            return redirect(url_for("index"))
             
-        view = False
+        view = True
 
         filetype = file.mime.split('/')[0]  # Get the type of the file (e.g., text, image, audio)
 
-        # Allow for viewing of all viewable types, and add application/pdf, 
-        # fixes bugs with files not being viewable as magic was messing with mime types.
-        if filetype in ['text', 'image', 'audio', 'video'] or file.mime.startswith('application/pdf'):
-            view = True
-
         size_warn = False
-        hash_warn = False
 
         # If it's text, we will pass the content to the template, otherwise we'll just pass the url and let the browser handle it.
         if filetype == 'text':
             url = None
-            with open(os.path.join(config['local_data'], filename), 'r') as f:
-                encrypted = f.read().encode()
+            with open(os.path.join(config['local_data'], filename), 'rb') as f:
+                encrypted = f.read()
                 content = key.decrypt(encrypted)
                 content = content.decode('utf-8', errors='replace') # Just in case, we dont want the page to break if the text is not valid utf-8.
         else:
@@ -127,23 +123,7 @@ def view(filename):
         if api:
             return content if content else serve_file(filename)
         else:
-            return render_template('view.html', sha256=file.sha256, content=content, size_warn=size_warn, filetype=filetype, mime=file.mime, url=url, view=view, hash_warn=hash_warn, filename=filename, title=filename)
-   
-    elif request.method == 'POST':
-        file = db.session.query(File).filter_by(filename=filename).first()
-
-        # If it doesnt exist or its marked for deletion, say its not found.
-        if file is None or file.deleted:
-            return "File not found, sorry.", 404
-        
-        if worker.check_hash(request.form['mgmt'], file.mgmt):
-            db.session.delete(file)
-            os.remove(os.path.join(config['local_data'], filename))
-            db.session.commit()
-            return "File deleted.", 200
-        
-        else:
-            return "Management token incorrect.", 401
+            return render_template('view.html', sha256=file.sha256, content=content, size_warn=size_warn, filetype=filetype, mime=file.mime, url=url, view=view, filename=filename, title=filename)
 
 @app.route('/file/<filename>')
 def serve_file(filename):
@@ -186,7 +166,8 @@ def delete():
             db.session.delete(file)
             os.remove(os.path.join(config['local_data'], name))
             db.session.commit()
-            return "File deleted.", 200
+            flash("File deleted.")
+            return redirect(url_for("index"))
         else:
             return "Management token incorrect.", 401
     else:

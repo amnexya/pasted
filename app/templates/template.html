@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/static/css/style.css">
     <title>pasted.sh - {{title}}</title>
+
+    <script src="/path/to/highlight.min.js"></script>
 </head>
 
 <body class="bg-[url('/static/img/bgtile.png')] bg-repeat font-['Montserrat']">
+    <script>hljs.highlightAll();</script>
     {% block content %}
     {% endblock %}
 </body>

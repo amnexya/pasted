@@ -50,6 +50,8 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = config['database_uri']
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = config['max_file_size'] * 1024 * 1024
+app.config['SECRET_KEY'] = config['flask_secret_key']
+
 with open("key.txt", "rb") as f:
     app.config['encryption_key'] = f.read()
 
