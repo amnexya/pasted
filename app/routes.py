@@ -8,6 +8,7 @@ import datetime
 import os
 from app.models import File
 import io
+from markdown import markdown as md
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -116,6 +117,11 @@ def view(filename):
                 encrypted = f.read()
                 content = key.decrypt(encrypted)
                 content = content.decode('utf-8', errors='replace') # Just in case, we dont want the page to break if the text is not valid utf-8.
+                is_markdown = worker.is_markdown(file.filename, content)
+                print(is_markdown)
+                if is_markdown:
+                    content = md(content, extensions=['extra', 'codehilite'])
+                
         else:
             content = None
             url = f'/file/{filename}'
@@ -123,7 +129,7 @@ def view(filename):
         if api:
             return content if content else serve_file(filename)
         else:
-            return render_template('view.html', sha256=file.sha256, content=content, filesize=filesize, filetype=filetype, mime=file.mime, url=url, view=view, filename=filename, title=filename)
+            return render_template('view.html', sha256=file.sha256, is_markdown=is_markdown, content=content, filesize=filesize, filetype=filetype, mime=file.mime, url=url, view=view, filename=filename, title=filename)
 
 @app.route('/file/<filename>')
 def serve_file(filename):
