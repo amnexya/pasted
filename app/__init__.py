@@ -52,9 +52,21 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = config['max_file_size'] * 1024 * 1024
 app.config['SECRET_KEY'] = config['flask_secret_key']
 
+MARKDOWN_PATTERNS = [
+        r"^#{1,6}\s",          # headings
+        r"\*\*.*\*\*",         # bold
+        r"\*.*\*",             # italic
+        r"\[.*\]\(.*\)",       # links
+        r"^- ",                # unordered list
+        r"^\d+\.\s",           # ordered list
+        r"`.*`",               # inline code
+        r"```",                # code blocks
+    ]
+
 with open("key.txt", "rb") as f:
     app.config['encryption_key'] = f.read()
 
+print(f"{Colours.green}[INFO] {Colours.endc}Starting database...")
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 

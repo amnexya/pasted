@@ -1,4 +1,4 @@
-from app import config, db
+from app import config, db, MARKDOWN_PATTERNS
 from app.models import File, Quote
 import random
 import hashlib
@@ -8,6 +8,7 @@ import base64
 import os
 import bcrypt
 import io
+import re
     
 def save_file(file, filename):
     """Save a file to the local mount directory.
@@ -114,3 +115,16 @@ def generate_recent_pastes():
     except Exception as e:
         print(e)
         return None
+    
+def is_markdown(filename, content):
+    if filename.endswith('.md'):
+        return True
+    
+    matches = 0
+    for pattern in MARKDOWN_PATTERNS:
+        if re.search(pattern, content, re.MULTILINE):
+            matches += 1
+        if matches >= 2:  # if theres 2 matches, its probably markdown
+            return True
+        
+    return False

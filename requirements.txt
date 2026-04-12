@@ -10,3 +10,5 @@ pymysql # MySQL driver
 requests # HTTP requests
 bcrypt # Password hashing
 cryptography # File encryption
+ghlinguist
+markdown

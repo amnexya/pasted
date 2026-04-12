@@ -586,6 +586,9 @@
   .uppercase {
     text-transform: uppercase;
   }
+  .italic {
+    font-style: italic;
+  }
   .ordinal {
     --tw-ordinal: ordinal;
     font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
@@ -704,6 +707,69 @@
 @font-face {
   font-family: "Montserrat";
   src: url("/static/ttf/Montserrat-VariableFont_wght.ttf");
+}
+.md h1 {
+  margin-bottom: calc(var(--spacing) * 4);
+  font-size: var(--text-3xl);
+  line-height: var(--tw-leading, var(--text-3xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+.md h2 {
+  margin-bottom: calc(var(--spacing) * 3);
+  font-size: var(--text-2xl);
+  line-height: var(--tw-leading, var(--text-2xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+.md h3 {
+  margin-bottom: calc(var(--spacing) * 2);
+  font-size: var(--text-xl);
+  line-height: var(--tw-leading, var(--text-xl--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+.md p {
+  margin-bottom: calc(var(--spacing) * 4);
+}
+.md code {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-gray-100);
+  padding: calc(var(--spacing) * 2);
+  white-space: pre-wrap;
+}
+.md a {
+  color: var(--color-blue-500);
+  &:hover {
+    @media (hover: hover) {
+      text-decoration-line: underline;
+    }
+  }
+}
+.md img {
+  margin-bottom: calc(var(--spacing) * 4);
+  width: 50%;
+  border-radius: var(--radius-lg);
+}
+.md blockquote {
+  margin-bottom: calc(var(--spacing) * 4);
+  border-left-style: var(--tw-border-style);
+  border-left-width: 4px;
+  border-color: var(--color-gray-300);
+  padding-left: calc(var(--spacing) * 4);
+  color: var(--color-gray-600);
+  font-style: italic;
+}
+.md ul {
+  margin-bottom: calc(var(--spacing) * 4);
+  list-style-position: inside;
+  list-style-type: disc;
+}
+.md ol {
+  margin-bottom: calc(var(--spacing) * 4);
+  list-style-position: inside;
+  list-style-type: decimal;
 }
 @property --tw-rotate-x {
   syntax: "*";

@@ -17,7 +17,9 @@
         <p class="text-sm text-gray-600">{{mime}}</p>
         <p class="text-sm text-gray-600 mb-4">{{ filesize }} bytes</p>
         {% if view is true %}
-            {% if filetype == "text" %}
+            {% if is_markdown is true %}
+            <div class="bg-gray-100 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap md">{{content|safe}}</div>
+            {% elif filetype == "text" %}
             <pre class="bg-gray-100 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap"><code>{{content}}</code></pre>
             {% elif filetype == "image" %}
             <img src="{{url}}" width="800px" alt="{{filename}}" class="rounded-lg">
