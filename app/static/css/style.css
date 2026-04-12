@@ -29,6 +29,10 @@
     --container-2xl: 42rem;
     --text-sm: 0.875rem;
     --text-sm--line-height: calc(1.25 / 0.875);
+    --text-base: 1rem;
+    --text-base--line-height: calc(1.5 / 1);
+    --text-lg: 1.125rem;
+    --text-lg--line-height: calc(1.75 / 1.125);
     --text-xl: 1.25rem;
     --text-xl--line-height: calc(1.75 / 1.25);
     --text-2xl: 1.5rem;
@@ -729,6 +733,27 @@
   --tw-font-weight: var(--font-weight-bold);
   font-weight: var(--font-weight-bold);
 }
+.md h4 {
+  margin-bottom: calc(var(--spacing) * 2);
+  font-size: var(--text-lg);
+  line-height: var(--tw-leading, var(--text-lg--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+.md h5 {
+  margin-bottom: calc(var(--spacing) * 1);
+  font-size: var(--text-base);
+  line-height: var(--tw-leading, var(--text-base--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
+.md h6 {
+  margin-bottom: calc(var(--spacing) * 1);
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  --tw-font-weight: var(--font-weight-bold);
+  font-weight: var(--font-weight-bold);
+}
 .md p {
   margin-bottom: calc(var(--spacing) * 4);
 }
@@ -770,6 +795,17 @@
   margin-bottom: calc(var(--spacing) * 4);
   list-style-position: inside;
   list-style-type: decimal;
+}
+.md table {
+  margin-bottom: calc(var(--spacing) * 4);
+  width: 100%;
+  border-collapse: collapse;
+}
+.md th, .md td {
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-color: var(--color-gray-300);
+  padding: calc(var(--spacing) * 2);
 }
 @property --tw-rotate-x {
   syntax: "*";

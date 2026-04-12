@@ -21,6 +21,18 @@
     @apply text-xl font-bold mb-2;
 }
 
+.md h4 {
+    @apply text-lg font-bold mb-2;
+}
+
+.md h5 {
+    @apply text-base font-bold mb-1;
+}
+
+.md h6 {
+    @apply text-sm font-bold mb-1;
+}
+
 .md p {
     @apply mb-4;
 }
@@ -47,4 +59,12 @@
 
 .md ol {
     @apply list-decimal list-inside mb-4;
+}
+
+.md table {
+    @apply w-full border-collapse mb-4;
+}
+
+.md th, .md td {
+    @apply border border-gray-300 p-2;
 }

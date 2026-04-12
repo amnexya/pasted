@@ -11,4 +11,4 @@ requests # HTTP requests
 bcrypt # Password hashing
 cryptography # File encryption
 ghlinguist
-markdown
+pycmarkgfm
