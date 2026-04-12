@@ -8,7 +8,7 @@ import datetime
 import os
 from app.models import File
 import io
-from markdown import markdown as md
+import pycmarkgfm as md
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -124,7 +124,7 @@ def view(filename):
                 is_markdown = worker.is_markdown(file.filename, content)
                 print(is_markdown)
                 if is_markdown:
-                    content = md(content, extensions=['extra', 'codehilite'])
+                    content = md.gfm_to_html(content)
             
         if api:
             return content if content else serve_file(filename)
