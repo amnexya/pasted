@@ -110,9 +110,13 @@ def view(filename):
 
         filetype = file.mime.split('/')[0]  # Get the type of the file (e.g., text, image, audio)
 
+        url = f'/file/{filename}'
+
+        is_markdown = False
+        content = None
+
         # If it's text, we will pass the content to the template, otherwise we'll just pass the url and let the browser handle it.
         if filetype == 'text':
-            url = None
             with open(os.path.join(config['local_data'], filename), 'rb') as f:
                 encrypted = f.read()
                 content = key.decrypt(encrypted)
@@ -121,10 +125,6 @@ def view(filename):
                 print(is_markdown)
                 if is_markdown:
                     content = md(content, extensions=['extra', 'codehilite'])
-                
-        else:
-            content = None
-            url = f'/file/{filename}'
             
         if api:
             return content if content else serve_file(filename)
