@@ -8,6 +8,7 @@ Type=simple
 Restart=always
 RestartSec=1
 ExecStart=/root/pasted/run
+WorkingDirectory=/root/pasted
 
 [Install]
 WantedBy=multi-user.target
