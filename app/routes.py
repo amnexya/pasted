@@ -114,17 +114,22 @@ def view(filename):
 
         is_markdown = False
         content = None
-
-        # If it's text, we will pass the content to the template, otherwise we'll just pass the url and let the browser handle it.
-        if filetype == 'text':
-            with open(os.path.join(config['local_data'], filename), 'rb') as f:
-                encrypted = f.read()
-                content = key.decrypt(encrypted)
-                content = content.decode('utf-8', errors='replace') # Just in case, we dont want the page to break if the text is not valid utf-8.
-                is_markdown = worker.is_markdown(file.filename, content)
-                print(is_markdown)
-                if is_markdown:
-                    content = md.gfm_to_html(content)
+        try:
+            # If it's text, we will pass the content to the template, otherwise we'll just pass the url and let the browser handle it.
+            if filetype == 'text':
+                with open(os.path.join(config['local_data'], filename), 'rb') as f:
+                    encrypted = f.read()
+                    content = key.decrypt(encrypted)
+                    content = content.decode('utf-8', errors='replace') # Just in case, we dont want the page to break if the text is not valid utf-8.
+                    is_markdown = worker.is_markdown(file.filename, content)
+                    print(is_markdown)
+                    if is_markdown:
+                        content = md.gfm_to_html(content)
+        except Exception as e:
+            return f"""
+                <p>Sorry, something has went really wrong here, please email me with the below info. {config['site_admin']}</p>
+                <pre>{str(e)}</pre>
+                """
             
         if api:
             return content if content else serve_file(filename)
@@ -153,9 +158,10 @@ def serve_file(filename):
             download_name=filename
         )
     except Exception as e:
-        print(e)
-        flash("Error serving file.")
-        return redirect(url_for("index"))
+        return f"""
+                <p>Sorry, something has went really wrong here, please email me with the below info. {config['site_admin']}</p>
+                <pre>{str(e)}</pre>
+                """
     
 @app.route('/delete', methods=['GET', 'POST'])
 def delete():
