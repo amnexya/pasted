@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="flex justify-center items-center h-screen">
-    {% if config['storage_warning'] == "yes" %}
+    {% if storage_warning == "yes" %}
         <div class="bg-yellow-500 text-white p-4 rounded-lg mb-4">
             <p class="font-bold">There is currrently an ongoing issue with our storage provider, meaning that files may not be accessible or uploadable occasionally, this will be fixed soon.</p>
         </div>

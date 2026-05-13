@@ -18,7 +18,7 @@ def index():
     quote, quote_author = worker.get_quote_from_db()
     recent_files = worker.generate_recent_pastes()
 
-    resp = make_response(render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files, host=request.host, max_file_size=config['max_file_size'], version=config['version']))
+    resp = make_response(render_template('index.html', title='home', quote=quote, quote_author=quote_author, recent_files=recent_files, host=request.host, max_file_size=config['max_file_size'], version=config['version'], storage_warning=config['storage_warning']))
     resp.set_cookie('browserIdent', "1")
 
     return resp
