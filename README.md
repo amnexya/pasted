@@ -1,20 +1,13 @@
 ![pasted.sh](app/static/img/pastedlogo.png)
 
-This is the code for pasted.sh!
-
 ## What is pasted.sh?
-It is an easy to use temporary file-hosting and pastebin platform.
+It's a file hosting / pastebin platform.
 
-## Features
-- Easy to use in CLI
-  - `curl -F'file=@foo.txt' https://pasted.sh/paste`
-- Supports ShareX
-- Minimal but modern UI
-- No registration required
-- Minimal user info collection
+## What's it written in?
+Mainly Python, I use WSGI for the server, production runs with waitress, use regular flask for development.
 
 ## Need help?
-Feel free to email me at pasted@amnexya.com! I'll be happy to help you out.
+Email je@amnexya.com
 
 ## License
-pasted.sh is free software, and uses the MIT license, you can see that [here](LICENSE).
+pasted.sh is FOSS, and uses the MIT license, you can see that [here](LICENSE).
