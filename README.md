@@ -1,4 +1,4 @@
-![pasted.sh](app/static/img/pastedlogo.png)
+# ![pasted.sh](app/static/img/pastedlogo.png)
 
 ## What is pasted.sh?
 It's a file hosting / pastebin platform.

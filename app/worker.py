@@ -128,3 +128,15 @@ def is_markdown(filename, content):
             return True
         
     return False
+
+def find_bad_html(content):
+    """Check if the content has any bad HTML tags.
+
+    Args:
+        content (str): Content to check.
+    """
+
+    for pattern in config['bad_html_patterns']:
+        if re.search(pattern, content, re.MULTILINE):
+            return True
+    return False
