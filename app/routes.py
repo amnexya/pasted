@@ -213,7 +213,6 @@ def serve_file(filename):
 
         return send_file(
             io.BytesIO(decrypted_content),
-            mimetype="text/plain",  # i know i know but it stops xss so shut up
             as_attachment=False,
             download_name=filename,
         )
