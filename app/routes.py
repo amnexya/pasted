@@ -52,6 +52,14 @@ def paste(api=False):
     if request.method == "POST":
         key = fernet.Fernet(app.config["encryption_key"])
 
+        # grab detect checkbox status from page, this helps block bots as they check every box
+        detect = request.form.get("detect")
+        if detect:
+            return (
+                "BOT TRAFFIC DETECTED! Get to fuck clanker, I don't want your shitty SEO or IPTV ads.",
+                403,
+            )
+
         try:
             # Determine whether we have text or a file
             uploaded_file = request.files.get("file")

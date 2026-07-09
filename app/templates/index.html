@@ -1,63 +1,113 @@
-{% extends "template.html" %}
-
-{% block content %}
-
-{% if storage_warning == "yes" %}
+{% extends "template.html" %} {% block content %} {% if storage_warning == "yes"
+%}
 <div class="bg-yellow-500 text-white p-4 rounded-lg mb-4">
-    <p class="font-bold">There is currrently an ongoing issue with our storage provider, meaning that files may not be accessible or uploadable occasionally, this will be fixed soon.</p>
+    <p class="font-bold">
+        There is currrently an ongoing issue with our storage provider, meaning
+        that files may not be accessible or uploadable occasionally, this will
+        be fixed soon.
+    </p>
 </div>
 
 {% endif %}
 <div class="flex justify-center items-center h-screen">
     <div class="flex flex-col md:flex-row gap-2">
-        <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-107.5 max-w-[75%]">
-            <img src="/static/img/pastedlogo.png" alt="pasted.sh" width="300px">
-            <p class="text-gray-500 text-sm">Read the <a href="/faq" class="text-blue-500 hover:text-blue-600">FAQ</a>!</p>
+        <div
+            class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-107.5 max-w-[75%]"
+        >
+            <img
+                src="/static/img/pastedlogo.png"
+                alt="pasted.sh"
+                width="300px"
+            />
+            <p class="text-gray-500 text-sm">
+                Read the
+                <a href="/faq" class="text-blue-500 hover:text-blue-600">FAQ</a
+                >!
+            </p>
 
-            <form action="/paste" method="post" enctype="multipart/form-data" id="paste_form">
+            <form
+                action="/paste"
+                method="post"
+                enctype="multipart/form-data"
+                id="paste_form"
+            >
                 <!-- Upload file -->
-                <input type="file" name="file" id="file" accept="*/*" class="bg-[#009BFF] hover:bg-[#008deb] text-white rounded-lg p-2 my-2">
-                <textarea form="paste_form" name="file" id="text" placeholder="or paste text here" class="rounded-lg p-2 my-2 overflow-x-scroll overflow-y-scroll"></textarea>
-                <br>
-                <input type="checkbox" name="private" id="private" value="true">
-                <label for="private" style="font-size: 12px;">Exclude from "Recently Uploaded"</label>
-                <br>
-                <button type="submit" class="bg-[#009BFF] hover:bg-[#008deb] text-white rounded-lg p-2 my-2">Upload</button>
+                <input
+                    type="file"
+                    name="file"
+                    id="file"
+                    accept="*/*"
+                    class="bg-[#009BFF] hover:bg-[#008deb] text-white rounded-lg p-2 my-2"
+                />
+                <textarea
+                    form="paste_form"
+                    name="file"
+                    id="text"
+                    placeholder="or paste text here"
+                    class="rounded-lg p-2 my-2 overflow-x-scroll overflow-y-scroll"
+                ></textarea>
+                <br />
+                <input
+                    type="checkbox"
+                    name="private"
+                    id="private"
+                    value="true"
+                />
+                <label for="private" style="font-size: 12px"
+                    >Exclude from "Recently Uploaded"</label
+                >
+                <input type="checkbox" name="detect" class="hidden" />
+                <br />
+                <button
+                    type="submit"
+                    class="bg-[#009BFF] hover:bg-[#008deb] text-white rounded-lg p-2 my-2"
+                >
+                    Upload
+                </button>
                 <span class="text-gray-500 text-sm">or</span>
-                <a href="/delete" class="text-white bg-red-600 hover:bg-red-700 rounded-lg p-2 my-2">Delete a file</a>
+                <a
+                    href="/delete"
+                    class="text-white bg-red-600 hover:bg-red-700 rounded-lg p-2 my-2"
+                    >Delete a file</a
+                >
             </form>
 
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="bg-red-500 text-white p-2 rounded-lg my-2">{{ message|safe }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+            {% with messages = get_flashed_messages() %} {% if messages %} {%
+            for message in messages %}
+            <div class="bg-red-500 text-white p-2 rounded-lg my-2">
+                {{ message|safe }}
+            </div>
+            {% endfor %} {% endif %} {% endwith %}
 
             <script>
                 // Script for file input, one or the other not both.
-                const fileInput = document.getElementById('file');
-                const textInput = document.getElementById('text');
+                const fileInput = document.getElementById("file");
+                const textInput = document.getElementById("text");
 
-                fileInput.addEventListener('change', function() {
+                fileInput.addEventListener("change", function () {
                     if (fileInput.files.length > 0) {
                         textInput.disabled = true;
-                        textInput.value = ''; // Clear the text input if a file is already selected
-                        textInput.classList.replace('bg-[#009BFF]', 'bg-gray-500');
-                        textInput.classList.remove('hover:bg-[#008deb]');
+                        textInput.value = ""; // Clear the text input if a file is already selected
+                        textInput.classList.replace(
+                            "bg-[#009BFF]",
+                            "bg-gray-500",
+                        );
+                        textInput.classList.remove("hover:bg-[#008deb]");
                     } else {
                         textInput.disabled = false;
                     }
                 });
 
-                textInput.addEventListener('input', function() {
+                textInput.addEventListener("input", function () {
                     if (textInput.value.length > 0) {
                         fileInput.disabled = true;
-                        fileInput.value = ''; // Clear the file input if text is already entered
-                        fileInput.classList.add('opacity-50')
-                        fileInput.classList.replace('bg-[#009BFF]', 'bg-gray-500');
-                        fileInput.classList.remove('hover:bg-[#008deb]');
+                        fileInput.value = ""; // Clear the file input if text is already entered
+                        fileInput.classList.add("opacity-50");
+                        fileInput.classList.replace(
+                            "bg-[#009BFF]",
+                            "bg-gray-500",
+                        );
+                        fileInput.classList.remove("hover:bg-[#008deb]");
                     } else {
                         fileInput.disabled = false;
                     }
@@ -65,29 +115,57 @@
             </script>
 
             <p class="text-sm">Max file size: {{ max_file_size }}mb</p>
-            <p class="text-sm">Files are permanent<span class="text-gray-500 text-sm">*</span></p> 
+            <p class="text-sm">
+                Files are permanent<span class="text-gray-500 text-sm">*</span>
+            </p>
 
-            <p class="text-gray-500 text-sm my-2"><i>"{{quote}}" - {{quote_author}}</i></p>
-            <span class="text-gray-500 text-sm">* unless deleted manually or by a moderator</span>
-            <p class="text-sm text-gray-500"><a href="https://liberapay.com/amnexya/"><img src="https://img.shields.io/liberapay/receives/amnexya.svg?logo=liberapay"></a></p>
-            <a href="/faq" class="text-blue-500 hover:text-blue-600">FAQ</a> | <a href="/tos" class="text-blue-500 hover:text-blue-600">ToS</a> | <a href="/privacy" class="text-blue-500 hover:text-blue-600">Privacy Policy</a> 
-            <br>
-            <span class="text-gray-500 text-sm">pasted.sh v{{ version }}</span> - <a href="https://github.com/amnexya/pasted" class="text-sm text-blue-500 hover:text-blue-600">Source</a>
+            <p class="text-gray-500 text-sm my-2">
+                <i>"{{quote}}" - {{quote_author}}</i>
+            </p>
+            <span class="text-gray-500 text-sm"
+                >* unless deleted manually or by a moderator</span
+            >
+            <p class="text-sm text-gray-500">
+                <a href="https://liberapay.com/amnexya/"
+                    ><img
+                        src="https://img.shields.io/liberapay/receives/amnexya.svg?logo=liberapay"
+                /></a>
+            </p>
+            <a href="/faq" class="text-blue-500 hover:text-blue-600">FAQ</a> |
+            <a href="/tos" class="text-blue-500 hover:text-blue-600">ToS</a> |
+            <a href="/privacy" class="text-blue-500 hover:text-blue-600"
+                >Privacy Policy</a
+            >
+            <br />
+            <span class="text-gray-500 text-sm">pasted.sh v{{ version }}</span>
+            -
+            <a
+                href="https://github.com/amnexya/pasted"
+                class="text-sm text-blue-500 hover:text-blue-600"
+                >Source</a
+            >
         </div>
 
-        <div class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-87.5 max-w-[75%]">
+        <div
+            class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-87.5 max-w-[75%]"
+        >
             <h2 class="font-bold text-2xl mb-1">Recently pasted</h2>
             {% if recent_files == [] %}
-                <ul>
-                    <li>Something broke, it'll be fixed soon.</li>
-                </ul>
-            {% else %}
-                {% for recent in recent_files %}
-                <ul class="list-disc">
-                    <li><a href="https://{{host}}/{{recent.filename}}" class="text-white bg-[#009BFF] hover:bg-[#008deb] p-1 my-2 rounded-lg">{{recent.filename}}</a> - {{recent.date}} - {{recent.size}}{{recent.size_unit}}</li>
-                </ul>
-                {% endfor %}
-            {% endif %}
+            <ul>
+                <li>Something broke, it'll be fixed soon.</li>
+            </ul>
+            {% else %} {% for recent in recent_files %}
+            <ul class="list-disc">
+                <li>
+                    <a
+                        href="https://{{host}}/{{recent.filename}}"
+                        class="text-white bg-[#009BFF] hover:bg-[#008deb] p-1 my-2 rounded-lg"
+                        >{{recent.filename}}</a
+                    >
+                    - {{recent.date}} - {{recent.size}}{{recent.size_unit}}
+                </li>
+            </ul>
+            {% endfor %} {% endif %}
         </div>
     </div>
 </div>

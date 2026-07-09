@@ -5,4 +5,3 @@
 # */5 * * * * /path/to/mount-keepalive.sh
 
 ls /srv/pasted-data/ > /dev/null 2>&1
-
