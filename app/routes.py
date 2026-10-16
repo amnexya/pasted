@@ -27,7 +27,7 @@ def index():
         return paste(api=True)
 
     quote, quote_author = worker.get_quote_from_db()
-    recent_files = worker.generate_recent_pastes()
+    announcements = worker.get_announcements()
 
     resp = make_response(
         render_template(
@@ -35,7 +35,7 @@ def index():
             title="home",
             quote=quote,
             quote_author=quote_author,
-            recent_files=recent_files,
+            announcements=announcements,
             host=request.host,
             max_file_size=config["max_file_size"],
             version=config["version"],

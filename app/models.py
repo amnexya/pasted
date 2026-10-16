@@ -32,3 +32,14 @@ class Quote(db.Model):
 
     def __repr__(self):
         return f"<Quote {self.id}>"
+
+class Announcement(db.Model):
+    __tablename__ = "announcements"
+
+    id = db.Column(db.Integer, primary_key=True)  # Auto-incrementing ID
+    message = db.Column(db.String(512), nullable=False)  # Announcement message
+    date_posted = db.Column(db.DateTime, nullable=False)  # Date and time of posting
+    title = db.Column(db.String(256), nullable=False)  # Title of the announcement
+
+    def __repr__(self):
+        return f"<Announcement {self.id}>"
