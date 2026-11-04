@@ -1,0 +1,31 @@
+# compose.yml
+
+services:
+  pasted:
+    build: . # Build from this directory
+    ports:
+      - "127.0.0.1:5000:80" # Only reachable via nginx on this host (Docker ports bypass ufw)
+    env_file: .env # Pass through .env
+    volumes:
+      - /srv/pasted:/srv/pasted
+    restart: unless-stopped
+    depends_on: # Wait until MariaDB is actually accepting connections, not just started
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:latest # Pull MariaDB
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mariadbdata:/var/lib/mysql # Create its storage directory
+    env_file: .env # Get .env again
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+# This section just creates the storage volume for MariaDB
+volumes:
+  mariadbdata: {}

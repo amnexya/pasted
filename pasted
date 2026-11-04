@@ -1,0 +1,110 @@
+#!/usr/bin/env python3
+
+# This file runs pasted in this directory.
+# Pass --debug as a flag to use flask on port 8080.
+
+import logging
+import os
+import sys
+import re
+
+from waitress import serve
+
+logger = logging.getLogger("waitress").setLevel(logging.INFO)
+
+# This only covers IPV4
+# IPV6 is really weird to regex.
+IP_REGEX = r'^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d))$'
+HELP_MSG = """
+Usage: pasted [options...]
+
+Arguments are listed in order of priority, higher priority
+means it will overwrite the value listed, or ignore other
+flags.
+
+No arguments                    Runs using waitress on port 80,
+($ ./pasted)                    and host "0.0.0.0".
+Priority: 0
+                                port: 80
+                                debug: False
+                                host: "0.0.0.0"
+
+                                Checks for root (UID: 0), exits
+                                if not found.
+
+-d, --debug                     Runs using flask with values as
+($ ./pasted -d)                 written below.
+($ ./pasted --debug)
+Priority: 1                     port: 8080
+                                debug: True
+                                host: "127.0.0.1"               
+
+-H, --host <host>               Changes the host the flask app
+($ ./pasted -h "1.2.3.4")       runs on.
+($ ./pasted --host "1.2.3.4")  
+Priority: 10                    host: <host>
+
+-p, --port <port>               Changes the port the flask app
+($ ./pasted -p 8080)            runs on.
+($ ./pasted --port 8080)
+Priority: 11                    port: <port>
+
+                                Checks for root if port is
+                                under 1024, exits if not found.
+
+-h, --help                      Ignores all values, shows a
+Priority: 100                   help message, then quits.
+"""
+
+if __name__ == "__main__":
+    from app import app, die
+
+    # default variables
+    port=80
+    debug=False
+    host="0.0.0.0"
+
+    for flag in ("-h", "--help"):
+        if flag in sys.argv:
+            # Print help and exit
+            print(HELP_MSG)
+            sys.exit()
+
+    for flag in ("-d", "--debug"):
+        if flag in sys.argv:
+            # set debug variables
+            debug = True
+            port = 8080
+            host = "127.0.0.1"
+
+    for flag in ("-p", "--port"):
+        if flag in sys.argv:
+            try:
+                i = sys.argv.index(flag)+1 # get index
+                port = int(sys.argv[i]) # this covers checking the index exists, and that its a number
+            except Exception as e:
+                # If it dies, then provide usage and quit
+                die("Number not detected after port flag. Please ensure you are setting your port correctly. (Usage: -p 8080, --port 8080)")
+            # Break out if we got it
+            break
+
+    for flag in ("-H", "--host"):
+        if flag in sys.argv:
+            try:
+                i = sys.argv.index(flag)+1 # get index
+                host = sys.argv[i] if re.match(IP_REGEX, sys.argv[i]) else None # set host to index if it matches regex
+            except:
+                host = None
+            if host is None:
+                die("Something went wrong parsing your host. Please ensure it is an IPV4 address, and you have set it correctly. (Usage: -h 0.0.0.0, --host 127.0.0.1)")
+
+    if debug and host not in ("127.0.0.1", "localhost"):
+        die("Refusing to expose Werkzeug debugger on a non-loopback host, please set your host to 127.0.0.1")
+
+    if os.geteuid() != 0 and port < 1024:
+        die("You are not root, any port under 1024 requires root, please run again as root or change your port with --port.")
+
+    if debug:
+        app.run(host=host, port=port, debug=debug)
+    else:
+        serve(app, host=host, port=port)

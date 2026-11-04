@@ -1,4 +1,5 @@
 import base64
+import datetime
 import hashlib
 import io
 import mimetypes
@@ -9,8 +10,8 @@ import re
 import bcrypt
 import magic
 
-from app import MARKDOWN_PATTERNS, config, db
-from app.models import File, Quote
+from app import MARKDOWN_PATTERNS, SAFE_MIME, db, app
+from app.models import File, Quote, Announcement, BanList
 
 
 def save_file(file, filename):
@@ -22,43 +23,33 @@ def save_file(file, filename):
     """
     # Are we working with BytesIO or FileStorage?
     if isinstance(file, io.BytesIO):
-        with open(os.path.join(config["local_data"], filename), "wb") as f:
+        with open(os.path.join(app.config["LOCAL_DATA"], filename), "wb") as f:
             f.write(file.getbuffer())
     else:
-        file.save(os.path.join(config["local_data"], filename))
+        file.save(os.path.join(app.config["LOCAL_DATA"], filename))
 
 
-def upload_file(file, filename, mime):
-    """Take user uploaded file and place it in local mount directory
-
-    Args:
-        file (_type_): _description_
-        filename (_type_): _description_
-        mime (_type_): _description_
-    """
-
-
-def create_db_entry(ip, date, filename, mgmt, size, mime, sha256, private, deleted):
+def create_db_entry(ip, date, filename, mgmt, size, mime, sha256, private):
     """
     Create a new file entry in the db.
     Returns True if successful, False otherwise and prints log.
     """
     try:
         new_file = File(
-            ip=ip,
-            date=date,
-            filename=filename,
-            mgmt=mgmt,
-            size=size,
-            mime=mime,
-            sha256=sha256,
-            private=private,
-            deleted=deleted,
-        )  # type: ignore
+            ip=ip, # type: ignore
+            date=date, # type: ignore
+            filename=filename, # type: ignore
+            mgmt=mgmt, # type: ignore
+            size=size, # type: ignore
+            mime=mime, # type: ignore
+            sha256=sha256, # type: ignore
+            private=private, # type: ignore
+        )
         db.session.add(new_file)
         db.session.commit()
         return True
     except Exception as e:
+        db.session.rollback()
         print(e)
         return False
 
@@ -81,17 +72,6 @@ def sha256gen(file):
     return file_hash
 
 
-def get_file_from_storage(filename, mime):
-    try:
-        with open(os.path.join(config["local_mount"], filename), "rb") as f:
-            data = io.BytesIO(f.read())
-            data.seek(0)
-            return data
-    except Exception as e:
-        print(e)
-        return None
-
-
 def generate_hash(str_hash):
     return bcrypt.hashpw(str_hash.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
@@ -107,67 +87,34 @@ def name_randomiser():
         str: Random filename.
     """
     return "".join(
-        random.choices(
-            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=4
-        )
+        random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=4)
     )
 
 
 def get_quote_from_db():
-    try:
-        quote = (
-            db.session.query(Quote)
-            .filter_by(id=random.randint(1, db.session.query(Quote).count()))
-            .first()
-        )
-        return quote.quote, quote.author  # type: ignore
-    except ValueError:
-        return "the quotes broke, i need to fix that!", "amnexya"
+    count = db.session.query(Quote).count()
+    if count == 0:
+        return "oops! quotes are broken. fixing it soon!", "amnexya"
+    quote = db.session.query(Quote).offset(random.randrange(count)).first()
+    return quote.quote, quote.author # type: ignore
 
-
-def generate_recent_pastes():
+def get_announcements():
     try:
-        # Query the db and get, lets say past 16 files uploaded, we need to check if the privacy shows listable.
-        files = (
-            db.session.query(File)
-            .filter_by(deleted=False)
-            .order_by(File.date.desc())
-            .limit(16)
-            .all()
-        )
-        # Create a list of files
-        file_list = []
-        for file in files:
-            if file.private:
-                continue
-            file_list.append(
-                {
-                    "filename": file.filename,
-                    "date": file.date,
-                    "size": round(file.size / 1024 / 1024, 2)
-                    if round(file.size / 1024 / 1024, 2) > 0.0
-                    else round(file.size / 1024, 2),
-                    "size_unit": "MB"
-                    if round(file.size / 1024 / 1024, 2) > 0.0
-                    else "KB",
-                }
-            )
-            if file_list.__len__() >= 8:
-                break
-        # Return the list of files
-        return file_list
+        announcements = db.session.query(Announcement).order_by(Announcement.date_posted.desc()).limit(5).all()
+        return announcements
     except Exception as e:
         print(e)
-        return None
+        return []
 
 
 def is_markdown(filename, content):
     if filename.endswith(".md"):
         return True
 
+    sample = content[:10000]
     matches = 0
     for pattern in MARKDOWN_PATTERNS:
-        if re.search(pattern, content, re.MULTILINE):
+        if re.search(pattern, sample, re.MULTILINE):
             matches += 1
         if matches >= 2:  # if theres 2 matches, its probably markdown
             return True
@@ -175,14 +122,44 @@ def is_markdown(filename, content):
     return False
 
 
-def find_bad_html(content):
-    """Check if the content has any bad HTML tags.
+def ban_ip(ip, reason):
+    """Ban an IP from uploading files.
 
     Args:
-        content (str): Content to check.
+        ip (str): the ip to ban
+        reason (str): reason for ban
     """
+    try:
+        ban = BanList(
+            ip=ip, # type: ignore
+            reason=reason, # type: ignore
+            date=datetime.datetime.now() # type: ignore
+        )
+        db.session.add(ban)
+        db.session.commit()
+        print("Banned successfully")
+    except Exception as e:
+        print(e)
+        print("something went wrong, check above for info")
 
-    for pattern in config["bad_html_patterns"]:
-        if re.search(pattern, content, re.MULTILINE):
-            return True
-    return False
+
+def is_renderable(mime):
+    """This prevents HTML, CSS, and JS from rendering/running under serve_files
+
+    Args:
+        mime (str): the mime to check
+
+    Returns:
+        str: the mime to swap with, or "download" if the file shouldn't be rendered.
+    """
+    # Check if it is something we can render as plain text, including svg's with the +xml as they can contain scripts.
+    if mime.endswith("+xml") or mime.endswith("/xml") or mime.startswith("text/") or mime in {"application/json", "application/javascript"}:
+        return "text/plain"
+
+    # If we have it in safe, return the regular mime
+    if mime in SAFE_MIME or mime.startswith(SAFE_MIME):
+        return mime
+
+    # Otherwise download it
+    return "download"
+

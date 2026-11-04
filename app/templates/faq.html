@@ -1,7 +1,7 @@
 {% extends "template.html" %} {% block content %}
-<div class="flex justify-center items-center h-screen">
+<div class="flex justify-center items-center max-h-[50vw]">
     <div
-        class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 min-w-107.5 max-w-[75%] max-h-screen overflow-y-auto m-8"
+        class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 min-w-107.5 max-w-[75%] overflow-y-auto max-h-[45vw] m-8"
     >
         <h1 class="font-bold text-2xl underline"><u>FAQ</u></h1>
         <p>
@@ -26,11 +26,11 @@
             <li>To upload a file:</li>
             <pre><code>curl -F "file=@/path/to/your/file" https://pasted.sh</code></pre>
             <li>To upload text:</li>
-            <pre><code>curl -F "your text here" https://pasted.sh</code></pre>
+            <pre><code>curl -F "file=your text here" https://pasted.sh</code></pre>
             <li>To upload privately:</li>
             <pre><code>curl -F "file=@/path/to/your/file" -F "private=true" https://pasted.sh</code></pre>
             <li>To delete a file:</li>
-            <pre><code>curl -F "name=filename.txt" -F "mgmt=management_token" https://pasted.sh/delete</code></pre>
+            <pre><code>curl -F "name=filename.txt" -F "mgmt_token=management_token" https://pasted.sh/delete</code></pre>
         </ul>
 
         <h2 class="text-xl mt-2">How long do my files last for?</h2>
@@ -49,11 +49,16 @@
         <h2 class="text-xl mt-2">How do I remove a file?</h2>
         <p>
             You are given a management token when you upload a file, which you
-            can use to remove or modify your file.
+            can use to remove your file.
         </p>
         <p>
             If you have lost this token, unfortunately there is no way to
             recover it.
+        </p>
+
+        <h2 class="text-xl mt-2">Can I be banned?</h2>
+        <p>
+            You will always be able to view files on pasted.sh (unless you have been added to fail2ban), however if you go against the ToS and don't stop after your files are removed, you will be banned from uploading files.
         </p>
 
         <h2 class="text-xl mt-2">Can anyone access my data?</h2>
@@ -87,9 +92,7 @@
         </p>
         <p>
             You do have the option to go the legal route and have me served with
-            a warrant, subpoena, court order, etc, but I'll be quite honest I
-            don't really want to wake up to my flat being raided by armed police
-            and getting all my stuff seized sooooo.
+            a warrant, subpoena, court order, etc, however I would rather you contact me directly first, rather then going through those routes.
         </p>
 
         <h2 class="text-xl mt-2">What logs are kept?</h2>
