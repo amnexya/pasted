@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 import sys
 import tomllib
@@ -51,6 +52,8 @@ def die(msg: str="Exiting...") -> None:
 
 info("Starting up...")
 app = Flask(__name__)
+
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
 # We need .env unless we're running under docker.
 info("Looking for .env")

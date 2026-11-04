@@ -51,7 +51,7 @@ def paste(api=False):
         return "Wrong method, use a POST request for this route."
 
     # Check if a user is banned
-    ban_check = db.session.query(BanList).filter_by(ip=request.headers.get("X-Real-IP", request.remote_addr)).first()
+    ban_check = db.session.query(BanList).filter_by(ip=request.remote_addr).first()
     if ban_check != None:
         return render_template("banned.html", ip=ban_check.ip, date=ban_check.date, reason=ban_check.reason)
 
@@ -134,7 +134,7 @@ def paste(api=False):
         worker.save_file(current_file, filename)
 
         worker.create_db_entry(
-            request.headers.get("X-Real-IP", request.remote_addr),  # IP
+            request.remote_addr,  # IP
             datetime.datetime.now(),  # Date
             filename,  # Filename
             worker.generate_hash(mgmt),  # Hash mgmt token
