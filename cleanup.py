@@ -4,7 +4,8 @@ import os
 
 import tomllib
 
-from app import app, models
+from app import app, models, db
+from app.models import File
 
 
 def load_cfg():
@@ -52,10 +53,24 @@ def main():
         print("-- DISCREPANIES FOUND: Files not in DB but are in local. --")
         print([f for f in files if f not in db_files])
         print("Fixing discrepancies...")
+        
         # get list of files not in db
         for f in [f for f in files if f not in db_files]:
             print("Removing file " + f + " from local...")
             os.remove(os.path.join(cfg["local_data"], f))
+
+    elif [f for f in db_files if f not in files]:
+        print("-- DISCREPANIES FOUND: Files in DB are not in local. --")
+        print([f for f in db_files if f not in files])
+        print("Fixing discrepancies...")
+
+        for f in [f for f in db_files if f not in files]:
+            print("Removing entry " + f + " from DB...")
+            file = db.session.query(File).filter_by(filename=f).first()
+            db.session.delete(file)
+
+        db.session.commit()
+
     else:
         print("-- No discrepancies found, files and DB are clean. --")
 
