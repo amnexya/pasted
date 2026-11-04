@@ -29,7 +29,7 @@ def save_file(file, filename):
         file.save(os.path.join(app.config["LOCAL_DATA"], filename))
 
 
-def create_db_entry(ip, date, filename, mgmt, size, mime, sha256, private, deleted):
+def create_db_entry(ip, date, filename, mgmt, size, mime, sha256, private):
     """
     Create a new file entry in the db.
     Returns True if successful, False otherwise and prints log.
@@ -44,7 +44,6 @@ def create_db_entry(ip, date, filename, mgmt, size, mime, sha256, private, delet
             mime=mime, # type: ignore
             sha256=sha256, # type: ignore
             private=private, # type: ignore
-            deleted=deleted # type: ignore
         )
         db.session.add(new_file)
         db.session.commit()
@@ -115,7 +114,7 @@ def is_markdown(filename, content):
     sample = content[:10000]
     matches = 0
     for pattern in MARKDOWN_PATTERNS:
-        if re.search(pattern, content, re.MULTILINE):
+        if re.search(pattern, sample, re.MULTILINE):
             matches += 1
         if matches >= 2:  # if theres 2 matches, its probably markdown
             return True

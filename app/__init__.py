@@ -26,15 +26,13 @@ class c_fg:
 MARKDOWN_PATTERNS = [
         r"^#{1,6}\s",          # headings
         r"\*\*.*\*\*",         # bold
-        r"\*.*\*",             # italic
         r"\[.*\]\(.*\)",       # links
         r"^- ",                # unordered list
         r"^\d+\.\s",           # ordered list
-        r"`.*`",               # inline code
         r"```",                # code blocks
     ]
 
-SAFE_MIME = ["image/", "audio/", "video/", "font/", "application/pdf"]
+SAFE_MIME = ("image/", "audio/", "video/", "font/", "application/pdf")
 
 # Define logging
 def info(msg: str) -> None:
@@ -106,10 +104,7 @@ info("Starting database")
 # pauses occasionally to wait for db to start
 try:
     db = SQLAlchemy(app)
-    sleep(1)
-
     migrate = Migrate(app, db)
-    sleep(1)
 
     # update db
     # same as running flask init, upgrade, and migrate all in one.

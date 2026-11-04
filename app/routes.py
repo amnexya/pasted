@@ -1,10 +1,11 @@
 import datetime
 import io
 import os
+import re
 
 import pycmarkgfm as md
-from cryptography import fernet
 from flask import (
+    Response,
     flash,
     make_response,
     redirect,
@@ -17,8 +18,11 @@ from magic import Magic
 from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from app import app, db, worker
+from app import app, db, storage, worker
 from app.models import File, BanList
+
+EXT_RE = re.compile(r"[A-Za-z0-9]{1,16}")
+PREVIEW_LIMIT = 1024 * 1024  # only the first 1 MB of a text file goes in the view page
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -49,9 +53,6 @@ def paste(api=False):
     ban_check = db.session.query(BanList).filter_by(ip=request.remote_addr).first()
     if ban_check != None:
         return render_template("banned.html", ip=ban_check.ip, date=ban_check.date, reason=ban_check.reason)
-
-    # Get fernet key
-    key = fernet.Fernet(app.config["ENC_KEY"])
 
     # grab detect checkbox status from page, this helps block bots as they usually check every box
     detect = request.form.get("detect")
@@ -86,10 +87,10 @@ def paste(api=False):
     mime = Magic(mime=True).from_buffer(current_file.stream.read(2048))  # try and get mimetype
     current_file.stream.seek(0)  # Reset the stream position after reading for magic
 
-    ext = current_file.filename.split(".")[-1]  # type: ignore
-
-    if ext == "":
-        ext = "bin"  # Default to bin if no extension provided, just to be safe.
+    original = current_file.filename or ""
+    ext = original.rsplit(".", 1)[1] if "." in original else ""
+    if not EXT_RE.fullmatch(ext):
+        ext = "bin"  # no extension, or one with characters we don't want in a filename/URL/header
 
     # find usable filename
     c = 0 # counter for max retries
@@ -104,30 +105,16 @@ def paste(api=False):
             c+=1
 
 
-    filesize = current_file.seek(0, os.SEEK_END)
-    current_file.seek(0)
-
     # Check if file should be made private
     private = False
     if request.form.get("private"):
         private = True
 
-    sha256 = worker.sha256gen(current_file)
-
-    # encrypt the file
-    encrypted_content = key.encrypt(current_file.read())
-
-    # save the encrypted content to a filestorage object
-    current_file = FileStorage(
-        stream=io.BytesIO(encrypted_content),
-        filename=current_file.filename,
-        content_type=current_file.content_type,
-    )
-    current_file.seek(0)
-
-    # We will save the file before we add it to the db,
-    # it'll get cleaned up if the upload fails.
-    worker.save_file(current_file, filename)
+    # Encrypt straight from the upload stream to disk, a chunk at a time.
+    # Hashing and size counting happen in the same pass over the plaintext.
+    path = os.path.join(app.config["LOCAL_DATA"], filename)
+    current_file.stream.seek(0)
+    filesize, sha256 = storage.write_file(current_file.stream, path)
 
     ok = worker.create_db_entry(
         request.remote_addr,  # IP
@@ -138,13 +125,12 @@ def paste(api=False):
         mime,  # MimeType
         sha256,  # SHA256
         private,  # Exclude from recent
-        False,
     )
 
     current_file.close()
 
     if not ok:
-        os.remove(os.path.join(app.config["LOCAL_DATA"], filename))
+        os.remove(path)
         return "Sorry, upload failed. Please try again later", 500
 
     if api:
@@ -159,7 +145,6 @@ def paste(api=False):
 def view(filename):
     if request.method == "GET":
         file = db.session.query(File).filter_by(filename=filename).first()
-        key = fernet.Fernet(app.config["ENC_KEY"])
 
         api = False
         if "text/html" not in request.headers.get("Accept", ""):
@@ -179,84 +164,95 @@ def view(filename):
 
         url = f"/file/{filename}"
 
+        if api:
+            return serve_file(filename)
+
         is_markdown = False
         content = None
+        truncated = False
         try:
             # If it's text, we will pass the content to the template, otherwise we'll just pass the url and let the browser handle it.
             if filetype == "text":
-                with open(os.path.join(app.config["LOCAL_DATA"], filename), "rb") as f:
-                    encrypted = f.read()
-                    content = key.decrypt(encrypted)
-                    content = content.decode("utf-8", errors="replace"
-                    )  # Just in case, we dont want the page to break if the text is not valid utf-8.
-                    is_markdown = worker.is_markdown(file.filename, content)
+                path = os.path.join(app.config["LOCAL_DATA"], filename)
+                preview = b"".join(storage.read_range(path, 0, PREVIEW_LIMIT))
+                truncated = file.size > PREVIEW_LIMIT
+                # errors="replace" also covers a multi-byte char cut in half at the limit
+                content = preview.decode("utf-8", errors="replace")
+                is_markdown = worker.is_markdown(file.filename, content)
 
-                    if is_markdown:
-                        content = md.gfm_to_html(content)
+                if is_markdown:
+                    content = md.gfm_to_html(content)
         except Exception as e:
             return f"""
                 <p>Sorry, something has went really wrong here, please email me with the below info. {app.config["SITE_ADMIN"]}</p>
                 <pre>{str(e)}</pre>
                 """
 
-        if api:
-            return serve_file(filename)
-        else:
-            return render_template(
-                "view.html",
-                sha256=file.sha256,
-                is_markdown=is_markdown,
-                content=content,
-                filesize=filesize,
-                filetype=filetype,
-                mime=file.mime,
-                url=url,
-                view=view,
-                filename=filename,
-                title=filename,
-            )
+        return render_template(
+            "view.html",
+            truncated=truncated,
+            sha256=file.sha256,
+            is_markdown=is_markdown,
+            content=content,
+            filesize=filesize,
+            filetype=filetype,
+            mime=file.mime,
+            url=url,
+            view=view,
+            filename=filename,
+            title=filename,
+        )
 
 
 @app.route("/file/<filename>")
 def serve_file(filename):
-    """Serve encrypted files by decrypting and streaming them."""
+    """Decrypt and stream a file, a chunk at a time, with HTTP Range support."""
     file = db.session.query(File).filter_by(filename=filename).first()
-    key = fernet.Fernet(app.config["ENC_KEY"])
 
     if file is None:
         flash("File not found, sorry.")
         return redirect(url_for("index"))
 
+    path = os.path.join(app.config["LOCAL_DATA"], filename)
     try:
-        with open(os.path.join(app.config["LOCAL_DATA"], filename), "rb") as f:
-            encrypted_content = f.read()
-            decrypted_content = key.decrypt(encrypted_content)
+        size = storage.plaintext_size(path)
+    except (OSError, storage.StorageError):
+        app.logger.exception("Can't read %s", filename)
+        return "Sorry, this file is unavailable right now.", 500
 
-        mime = worker.is_renderable(file.mime)
+    mime = worker.is_renderable(file.mime)
+    download = mime == "download"
+    if download:
+        mime = "application/octet-stream"
 
-        download=False
-        if mime == "download":
-            mime="application/octet-stream"
-            download=True
+    start, stop, status = 0, size, 200
+    rng = request.range
+    if rng is not None and rng.units == "bytes" and len(rng.ranges) == 1:
+        bounds = rng.range_for_length(size)
+        if bounds is None:
+            return Response(status=416, headers={"Content-Range": f"bytes */{size}"})
+        start, stop = bounds
+        status = 206
 
-        return send_file(
-            io.BytesIO(decrypted_content),
-            as_attachment=download,
-            mimetype=mime,
-            download_name=filename
-        )
-    except Exception as e:
-        return f"""
-                <p>Sorry, something has went really wrong here, please email me with the below info. {app.config["SITE_ADMIN"]}</p>
-                <pre>{str(e)}</pre>
-                """
+    resp = Response(
+        storage.read_range(path, start, stop),
+        status=status,
+        mimetype=mime,
+        direct_passthrough=True,
+    )
+    resp.headers["Content-Length"] = str(stop - start)
+    resp.headers["Accept-Ranges"] = "bytes"
+    resp.headers["Content-Disposition"] = f'{"attachment" if download else "inline"}; filename="{filename}"'
+    if status == 206:
+        resp.headers["Content-Range"] = f"bytes {start}-{stop - 1}/{size}"
+    return resp
 
 
 @app.route("/delete", methods=["GET", "POST"])
 def delete():
     if request.method == "POST":
         name = request.form.get("name", "").strip()
-        mgmt_token = request.form.get("mgmt", "").strip()
+        mgmt_token = request.form.get("mgmt_token", "").strip()
 
         file = db.session.query(File).filter_by(filename=name).first()
 
@@ -265,9 +261,12 @@ def delete():
             return redirect(url_for("index"))
 
         if worker.check_hash(mgmt_token, file.mgmt):
-            os.remove(os.path.join(app.config['LOCAL_DATA'], name))
-            db.session.commit()
             db.session.delete(file)
+            db.session.commit()
+            try:
+                os.remove(os.path.join(app.config["LOCAL_DATA"], file.filename))
+            except FileNotFoundError:
+                pass
             flash("File deleted.")
             return redirect(url_for("index"))
         else:
