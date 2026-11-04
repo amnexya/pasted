@@ -17,9 +17,8 @@ from magic import Magic
 from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from app import app, config, db, worker
-from app.models import File
-
+from app import app, db, worker
+from app.models import File, BanList
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -37,9 +36,8 @@ def index():
             quote_author=quote_author,
             announcements=announcements,
             host=request.host,
-            max_file_size=config["max_file_size"],
-            version=config["version"],
-            storage_warning=config["storage_warning"],
+            max_file_size=app.config["MAX_FILE_SIZE"],
+            version=app.config["VERSION"],
         )
     )
     resp.set_cookie("browserIdent", "1")
@@ -49,99 +47,104 @@ def index():
 
 @app.route("/paste", methods=["GET", "POST"])
 def paste(api=False):
-    if request.method == "POST":
-        key = fernet.Fernet(app.config["encryption_key"])
+    if request.method == "GET":
+        return "Wrong method, use a POST request for this route."
 
-        # grab detect checkbox status from page, this helps block bots as they check every box
-        detect = request.form.get("detect")
-        if detect:
-            return (
-                "BOT TRAFFIC DETECTED! Get to fuck clanker, I don't want your shitty SEO or IPTV ads.",
-                403,
-            )
+    # Check if a user is banned
+    ban_check = db.session.query(BanList).filter_by(ip=request.headers.get("X-Real-IP", request.remote_addr)).first()
+    if ban_check != None:
+        return render_template("banned.html", ip=ban_check.ip, date=ban_check.date, reason=ban_check.reason)
 
-        try:
-            # Determine whether we have text or a file
-            uploaded_file = request.files.get("file")
-            uploaded_text = request.form.get("file")
+    # Get fernet key
+    key = fernet.Fernet(app.config["ENC_KEY"])
 
-            # Change it to a filestorage object so we can work with it the same way as uploaded files.
-            if uploaded_text:
-                current_file = FileStorage(
-                    stream=io.BytesIO(uploaded_text.encode()),
-                    filename="paste.txt",
-                    content_type="text/plain",
-                )
+    # grab detect checkbox status from page, this helps block bots as they usually check every box
+    detect = request.form.get("detect")
+    if detect:
+        return "Bot traffic detected. Bots are not permitted to upload to pasted.sh", 403
 
-            elif uploaded_file:
-                current_file = uploaded_file
+    try:
+        # Determine whether we have text or a file
+        uploaded_file = request.files.get("file")
+        uploaded_text = request.form.get("file")
 
-            else:
-                flash("No file or text provided.")
-                return redirect(url_for("index"))
-
-            mgmt = worker.create_mgmt_token()
-
-            mime = Magic(mime=True).from_buffer(current_file.stream.read(2048))  #
-            current_file.stream.seek(
-                0
-            )  # Reset the stream position after reading for magic
-
-            ext = current_file.filename.split(".")[-1]  # type: ignore
-
-            if ext == "":
-                ext = "bin"  # Default to bin if no extension provided, just to be safe.
-            filename = (
-                worker.name_randomiser() + "." + ext
-            )  # Just in case, we dont want any funny business with the filename.
-
-            filesize = current_file.seek(0, os.SEEK_END)
-            current_file.seek(0)
-
-            if request.form.get(
-                "private"
-            ):  # If it holds any value at all, we can set it to true.
-                private = True
-            else:
-                private = False
-
-            encrypted_content = key.encrypt(current_file.read())
+        # Change it to a filestorage object so we can work with it the same way as uploaded files.
+        if uploaded_text:
             current_file = FileStorage(
-                stream=io.BytesIO(encrypted_content),
-                filename=current_file.filename,
-                content_type=current_file.content_type,
+                stream=io.BytesIO(uploaded_text.encode()),
+                filename='p.txt',
+                content_type="text/plain" # force text/plain
             )
-            current_file.seek(0)
 
-            # We will save the file before we add it to the db,
-            # it'll get cleaned up if the upload fails.
-            worker.save_file(current_file, filename)
+        elif uploaded_file:
+            current_file = uploaded_file
 
-            worker.create_db_entry(
-                request.headers.get("X-Real-IP", request.remote_addr),  # IP
-                datetime.datetime.now(),  # Date
-                filename,  # Filename
-                worker.generate_hash(mgmt),  # Hash mgmt token
-                filesize,  # Size
-                mime,  # MimeType
-                worker.sha256gen(current_file),  # SHA256
-                private,  # Exclude from recent
-                False,
-            )  # Deleted, always false on upload, don't change unless you want to really fuck with your users :kekw:
-
-            current_file.close()
-
-            if api:
-                return {"mgmt": mgmt, "filename": filename}
-            else:
-                return render_template(
-                    "success.html", mgmt=mgmt, filename=filename, host=request.host
-                )
-        except RequestEntityTooLarge:
-            flash("File too large, try something smaller.")
+        else:
+            flash("No file or text provided.")
             return redirect(url_for("index"))
 
-    return "Wrong method, use a POST request for this route."
+        # Clear these variables to save memory
+        del uploaded_file
+        del uploaded_text
+
+        mgmt = worker.create_mgmt_token()
+
+        mime = Magic(mime=True).from_buffer(current_file.stream.read(2048))  # try and get mimetype
+        current_file.stream.seek(0)  # Reset the stream position after reading for magic
+
+        ext = current_file.filename.split(".")[-1]  # type: ignore
+
+        if ext == "":
+            ext = "bin"  # Default to bin if no extension provided, just to be safe.
+
+        filename = worker.name_randomiser() + "." + ext  # Just in case, we dont want any funny business with the filename.
+
+        filesize = current_file.seek(0, os.SEEK_END)
+        current_file.seek(0)
+
+        # Check if file should be made private
+        private = False
+        if request.form.get("private"):
+            private = True
+
+        # encrypt the file
+        encrypted_content = key.encrypt(current_file.read())
+
+        # save the encrypted content to a filestorage object
+        current_file = FileStorage(
+            stream=io.BytesIO(encrypted_content),
+            filename=current_file.filename,
+            content_type=current_file.content_type,
+        )
+        current_file.seek(0)
+
+        # We will save the file before we add it to the db,
+        # it'll get cleaned up if the upload fails.
+        worker.save_file(current_file, filename)
+
+        worker.create_db_entry(
+            request.headers.get("X-Real-IP", request.remote_addr),  # IP
+            datetime.datetime.now(),  # Date
+            filename,  # Filename
+            worker.generate_hash(mgmt),  # Hash mgmt token
+            filesize,  # Size
+            mime,  # MimeType
+            worker.sha256gen(current_file),  # SHA256
+            private,  # Exclude from recent
+            False,
+        )  # Deleted, always false on upload, don't change unless you want to really fuck with your users :kekw:
+
+        current_file.close()
+
+        if api:
+            return {"mgmt": mgmt, "filename": filename}
+        else:
+            return render_template(
+                "success.html", mgmt=mgmt, filename=filename, host=request.host
+            )
+    except RequestEntityTooLarge:
+        flash("File too large, try something smaller.")
+        return redirect(url_for("index"))
 
 
 @app.route("/<filename>")  # type: ignore
@@ -149,7 +152,7 @@ def view(filename):
     if request.method == "GET":
         api = False if request.cookies.get("browserIdent") else True
         file = db.session.query(File).filter_by(filename=filename).first()
-        key = fernet.Fernet(app.config["encryption_key"])
+        key = fernet.Fernet(app.config["ENC_KEY"])
 
         if file is None:
             flash("File not found, sorry.")
@@ -170,7 +173,7 @@ def view(filename):
         try:
             # If it's text, we will pass the content to the template, otherwise we'll just pass the url and let the browser handle it.
             if filetype == "text":
-                with open(os.path.join(config["local_data"], filename), "rb") as f:
+                with open(os.path.join(app.config["LOCAL_DATA"], filename), "rb") as f:
                     encrypted = f.read()
                     content = key.decrypt(encrypted)
                     content = content.decode(
@@ -182,12 +185,12 @@ def view(filename):
                         content = md.gfm_to_html(content)
         except Exception as e:
             return f"""
-                <p>Sorry, something has went really wrong here, please email me with the below info. {config["site_admin"]}</p>
+                <p>Sorry, something has went really wrong here, please email me with the below info. {app.config["SITE_ADMIN"]}</p>
                 <pre>{str(e)}</pre>
                 """
 
         if api:
-            return content if content else serve_file(filename)
+            return serve_file(filename)
         else:
             return render_template(
                 "view.html",
@@ -208,25 +211,33 @@ def view(filename):
 def serve_file(filename):
     """Serve encrypted files by decrypting and streaming them."""
     file = db.session.query(File).filter_by(filename=filename).first()
-    key = fernet.Fernet(app.config["encryption_key"])
+    key = fernet.Fernet(app.config["ENC_KEY"])
 
     if file is None or file.deleted:
         flash("File not found, sorry.")
         return redirect(url_for("index"))
 
     try:
-        with open(os.path.join(config["local_data"], filename), "rb") as f:
+        with open(os.path.join(app.config["LOCAL_DATA"], filename), "rb") as f:
             encrypted_content = f.read()
             decrypted_content = key.decrypt(encrypted_content)
 
+        mime = worker.is_renderable(file.mime)
+
+        download=False
+        if mime == "download":
+            mime="application/octet-stream"
+            download=True
+
         return send_file(
             io.BytesIO(decrypted_content),
-            as_attachment=False,
-            download_name=filename,
+            as_attachment=download,
+            mimetype=mime,
+            download_name=filename
         )
     except Exception as e:
         return f"""
-                <p>Sorry, something has went really wrong here, please email me with the below info. {config["site_admin"]}</p>
+                <p>Sorry, something has went really wrong here, please email me with the below info. {app.config["SITE_ADMIN"]}</p>
                 <pre>{str(e)}</pre>
                 """
 
@@ -237,8 +248,6 @@ def delete():
         name = request.form["name"].strip()
         mgmt_token = request.form["mgmt_token"].strip()
 
-        print(mgmt_token)
-
         file = db.session.query(File).filter_by(filename=name).first()
 
         if file is None:
@@ -247,7 +256,7 @@ def delete():
 
         if worker.check_hash(mgmt_token, file.mgmt):
             db.session.delete(file)
-            os.remove(os.path.join(config["local_data"], name))
+            os.remove(os.path.join(app.config['LOCAL_DATA'], name))
             db.session.commit()
             flash("File deleted.")
             return redirect(url_for("index"))
