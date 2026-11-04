@@ -1,79 +1,34 @@
 #!/usr/bin/env python3
-
-import os
-
-import tomllib
-
-from app import app, models, db
+import os, sys, time
+from app import app, db, die
 from app.models import File
 
-
-def load_cfg():
-    """Load the configuration from the config.toml file."""
-    while True:
-        if not os.path.exists(os.getcwd() + "/pasted.toml") and not os.path.exists(
-            os.path.expanduser("~/.config/pasted.toml")
-        ):
-            cfg_path = input(
-                "Config file not found in current directory, please enter absolute path to your config file: "
-            )
-        elif not os.path.exists(os.getcwd() + "/pasted.toml"):
-            cfg_path = os.path.expanduser("~/.config/pasted.toml")
-        else:
-            cfg_path = os.getcwd() + "/pasted.toml"
-
-        print("-- Got config file at " + cfg_path + " --")
-
-        # Check if file selected is valid
-        with open(cfg_path, "rb") as f:
-            try:
-                cfg = tomllib.load(f)
-                return cfg
-            except Exception as e:
-                print(f"Error loading config file: {e}")
-                continue
-
+GRACE_SECONDS = 600  # skip files newer than this, they may be mid-upload
 
 def main():
-    # start db
+    dry_run = "--dry-run" in sys.argv
     app.app_context().push()
+    data_dir = app.config["LOCAL_DATA"]
+    local = {f for f in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, f))}
+    in_db = {f.filename for f in File.query.all()}
 
-    cfg = load_cfg()
+    if in_db and not local:
+        die(f"{data_dir} is empty but the DB has {len(in_db)} files - is the storage mounted? Aborting.")
 
-    # Get local files
-    files = os.listdir(cfg["local_data"])
-    print("Local files found are " + ", ".join(files))
+    for f in sorted(local - in_db):
+        path = os.path.join(data_dir, f)
+        if time.time() - os.path.getmtime(path) < GRACE_SECONDS:
+            continue
+        print(f"Removing orphan file {f}")
+        if not dry_run:
+            os.remove(path)
 
-    # Get db files
-    db_files = [f.filename for f in models.File.query.all()]
-    print("DB files found are " + ", ".join(db_files))
-
-    # Compare lists
-    if [f for f in files if f not in db_files]:
-        print("-- DISCREPANIES FOUND: Files not in DB but are in local. --")
-        print([f for f in files if f not in db_files])
-        print("Fixing discrepancies...")
-        
-        # get list of files not in db
-        for f in [f for f in files if f not in db_files]:
-            print("Removing file " + f + " from local...")
-            os.remove(os.path.join(cfg["local_data"], f))
-
-    elif [f for f in db_files if f not in files]:
-        print("-- DISCREPANIES FOUND: Files in DB are not in local. --")
-        print([f for f in db_files if f not in files])
-        print("Fixing discrepancies...")
-
-        for f in [f for f in db_files if f not in files]:
-            print("Removing entry " + f + " from DB...")
-            file = db.session.query(File).filter_by(filename=f).first()
-            db.session.delete(file)
-
+    for f in sorted(in_db - local):
+        print(f"Removing orphan DB entry {f}")
+        if not dry_run:
+            db.session.query(File).filter_by(filename=f).delete()
+    if not dry_run:
         db.session.commit()
-
-    else:
-        print("-- No discrepancies found, files and DB are clean. --")
-
 
 if __name__ == "__main__":
     main()
