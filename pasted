@@ -39,7 +39,7 @@ Priority: 1                     port: 8080
                                 debug: True
                                 host: "127.0.0.1"               
 
--h, --host <host>               Changes the host the flask app
+-H, --host <host>               Changes the host the flask app
 ($ ./pasted -h "1.2.3.4")       runs on.
 ($ ./pasted --host "1.2.3.4")  
 Priority: 10                    host: <host>
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     if debug and host not in ("127.0.0.1", "localhost"):
         die("Refusing to expose Werkzeug debugger on a non-loopback host, please set your host to 127.0.0.1")
 
-    if os.geteuid() != 0 and port <= 1024:
+    if os.geteuid() != 0 and port < 1024:
         die("You are not root, any port under 1024 requires root, please run again as root or change your port with --port.")
 
     if debug:

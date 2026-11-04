@@ -6,6 +6,8 @@ services:
     ports:
       - "5000:80" # Send 80 from the container to 5000 on your host
     env_file: .env # Pass through .env
+    volumes:
+      - /srv/pasted:/srv/pasted
     depends_on: # Pasted depends on its db, so make sure thats started.
       - db
 

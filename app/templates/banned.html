@@ -10,12 +10,13 @@
         />
         <h1 class="font-semibold text-3xl my-2">Ban Notice</h1>
         <p class="my-2">You have been banned from pasted.sh, you may no longer upload files to this service, this ban is permanent.</p>
-        <p class="my-2">You are free to browse files, however your access to upload to this service has now been revoked, and all files uploaded from your IP have been deleted.
-        <p class="my-2">Information about your ban is available below, if you believe this ban was issued in error, please email <a class="text-blue-500 hover:text-blue-600" href="je@pasted.sh">je@pasted.sh</a>
+        <p class="my-2">You are free to browse files, however your access to upload to this service has now been revoked, and all files uploaded from your IP have been deleted.</p>
+        <p class="my-2">Information about your ban is available below, if you believe this ban was issued in error, please email <a class="text-blue-500 hover:text-blue-600" href="mailto:je@pasted.sh">je@pasted.sh</a>
         <ul class="list-disc list-inside ml-2 space-y-1">
             <li>IP: {{ ip }}</li>
             <li>Banned on: {{ date }}</li>
             <li>Reason: {{ reason }}</li>
+        </ul>
     </div>
 </div>
 {% endblock %}

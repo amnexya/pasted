@@ -48,7 +48,7 @@ def error(msg: str) -> None:
 
 def die(msg: str="Exiting...") -> None:
     error(msg)
-    sys.exit()
+    sys.exit(1)
 
 info("Starting up...")
 app = Flask(__name__)
@@ -86,6 +86,10 @@ info("Checking SECRET_KEY and ENC_KEY aren't the same.")
 # Check if keys are the same
 if app.config['SECRET_KEY'] == app.config['ENC_KEY']:
     die("Your secret key and encryption key have the same value, pasted will not start until these are different values.")
+
+info("Checking length of SECRET_KEY and ENC_KEY")
+if len(app.config['SECRET_KEY']) < 32 or len(app.config['ENC_KEY']) < 32:
+    die("Your secret key and encryption key are too short, pasted will not launch with insecure keys.")
 
 info("Looking for data directory")
 # check for local datadir

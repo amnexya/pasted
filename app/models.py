@@ -9,11 +9,11 @@ class File(db.Model):
     date = db.Column(db.DateTime, nullable=False)  # Date and time of upload
     filename = db.Column(db.String(256), nullable=False, unique=True, index=True)  # Filename
     mgmt = db.Column(db.String(64), nullable=False)  # Management ID, stored hashed
-    size = db.Column(db.Integer, nullable=False)  # Size of the file in bytes
+    size = db.Column(db.BigInteger, nullable=False)  # Size of the file in bytes
     mime = db.Column(db.String(256), nullable=False)  # MIME type of the file
     sha256 = db.Column(db.String(64), nullable=False)  # SHA256 hash of the file
     private = db.Column(db.Boolean, nullable=False)  # Allow the file to be listed in the recent list or not
-    
+
     def __repr__(self):
         return f"<File {self.id}>"
 

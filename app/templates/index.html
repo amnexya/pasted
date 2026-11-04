@@ -75,7 +75,7 @@
             {% with messages = get_flashed_messages() %} {% if messages %} {%
             for message in messages %}
             <div class="bg-red-500 text-white p-2 rounded-lg my-2">
-                {{ message|safe }}
+                {{ message }}
             </div>
             {% endfor %} {% endif %} {% endwith %}
 
