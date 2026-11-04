@@ -97,7 +97,18 @@ def paste(api=False):
         if ext == "":
             ext = "bin"  # Default to bin if no extension provided, just to be safe.
 
-        filename = worker.name_randomiser() + "." + ext  # Just in case, we dont want any funny business with the filename.
+        # find usable filename
+        c = 0 # counter for max retries
+        while True:
+            filename = worker.name_randomiser() + "." + ext  # Just in case, we dont want any funny business with the filename.
+            if c < 128 and db.session.query(File).filter_by(filename=filename).first() is None:
+                break
+            elif c >= 128:
+                return f"""We couldn't find you a filename, it's possible that pasted may have run out of, or be close to running out of 4 character file names. 
+                Please E-mail {app.config['SITE_ADMIN']} and say you got this message."""
+            else:
+                c+=1
+
 
         filesize = current_file.seek(0, os.SEEK_END)
         current_file.seek(0)

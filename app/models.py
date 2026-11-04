@@ -9,7 +9,7 @@ class File(db.Model):
         db.String(15), nullable=True
     )  # IP address of the user who uploaded the file
     date = db.Column(db.DateTime, nullable=False)  # Date and time of upload
-    filename = db.Column(db.String(256), nullable=False)  # Filename
+    filename = db.Column(db.String(256), nullable=False, unique=True, index=True)  # Filename
     mgmt = db.Column(db.String(64), nullable=False)  # Management ID, stored hashed
     size = db.Column(db.Integer, nullable=False)  # Size of the file in bytes
     mime = db.Column(db.String(256), nullable=False)  # MIME type of the file

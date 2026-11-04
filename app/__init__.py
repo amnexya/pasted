@@ -59,6 +59,7 @@ if os.getenv("RUN_MODE") == "docker":
 elif not os.path.exists(".env"):
     die("Could not find your .env file, please create this file from .env.example.")
 else:
+    load_dotenv()
     info(f"Found .env")
 
 # Config
