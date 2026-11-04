@@ -105,7 +105,7 @@ def paste(api=False):
                 break
             elif c >= 128:
                 return f"""We couldn't find you a filename, it's possible that pasted may have run out of, or be close to running out of 4 character file names. 
-                Please E-mail {app.config['SITE_ADMIN']} and say you got this message."""
+                Please E-mail {app.config['SITE_ADMIN']} and say you got this message.""", 500
             else:
                 c+=1
 
@@ -133,7 +133,7 @@ def paste(api=False):
         # it'll get cleaned up if the upload fails.
         worker.save_file(current_file, filename)
 
-        worker.create_db_entry(
+        ok = worker.create_db_entry(
             request.remote_addr,  # IP
             datetime.datetime.now(),  # Date
             filename,  # Filename
@@ -143,9 +143,13 @@ def paste(api=False):
             worker.sha256gen(current_file),  # SHA256
             private,  # Exclude from recent
             False,
-        )  # Deleted, always false on upload, don't change unless you want to really fuck with your users :kekw:
+        )
 
         current_file.close()
+
+        if not ok:
+            os.remove(os.path.join(app.config["LOCAL_DATA"], filename))
+            return "Sorry, upload failed. Please try again later", 500
 
         if api:
             return {"mgmt": mgmt, "filename": filename}

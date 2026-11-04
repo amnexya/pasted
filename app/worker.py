@@ -50,6 +50,7 @@ def create_db_entry(ip, date, filename, mgmt, size, mime, sha256, private, delet
         db.session.commit()
         return True
     except Exception as e:
+        db.session.rollback()
         print(e)
         return False
 
@@ -112,6 +113,7 @@ def is_markdown(filename, content):
     if filename.endswith(".md"):
         return True
 
+    sample = content[:10000]
     matches = 0
     for pattern in MARKDOWN_PATTERNS:
         if re.search(pattern, content, re.MULTILINE):
