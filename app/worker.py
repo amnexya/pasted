@@ -10,7 +10,7 @@ import bcrypt
 import magic
 
 from app import MARKDOWN_PATTERNS, config, db
-from app.models import File, Quote
+from app.models import File, Quote, Announcement
 
 
 def save_file(file, filename):
@@ -124,7 +124,7 @@ def get_quote_from_db():
     except ValueError:
         return "the quotes broke, i need to fix that!", "amnexya"
 
-
+# deprecated, removing in a later version.
 def generate_recent_pastes():
     try:
         # Query the db and get, lets say past 16 files uploaded, we need to check if the privacy shows listable.
@@ -156,6 +156,19 @@ def generate_recent_pastes():
                 break
         # Return the list of files
         return file_list
+    except Exception as e:
+        print(e)
+        return None
+
+def get_announcements():
+    try:
+        announcements = (
+            db.session.query(Announcement)
+            .order_by(Announcement.date_posted.desc())
+            .limit(5)
+            .all()
+        )
+        return announcements
     except Exception as e:
         print(e)
         return None

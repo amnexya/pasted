@@ -147,25 +147,26 @@
         </div>
 
         <div
-            class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-87.5 max-w-[75%]"
-        >
-            <h2 class="font-bold text-2xl mb-1">Recently pasted</h2>
-            {% if recent_files == [] %}
-            <ul>
-                <li>Something broke, it'll be fixed soon.</li>
-            </ul>
-            {% else %} {% for recent in recent_files %}
-            <ul class="list-disc">
-                <li>
-                    <a
-                        href="https://{{host}}/{{recent.filename}}"
-                        class="text-white bg-[#009BFF] hover:bg-[#008deb] p-1 my-2 rounded-lg"
-                        >{{recent.filename}}</a
-                    >
-                    - {{recent.date}} - {{recent.size}}{{recent.size_unit}}
-                </li>
-            </ul>
-            {% endfor %} {% endif %}
+            class="bg-white/50 backdrop-blur-xs rounded-lg shadow-lg p-8 w-min min-w-87.5 max-w-[75%]] max-h-[60vh]">
+            <h2 class="font-bold text-2xl mb-1">Notice Board</h2>
+            <div class="overflow-y-scroll max-h-[50vh]">
+                {% if announcements == [] %}
+                <p>No announcements found!</p>
+                {% else %} {% for announcement in announcements %}
+                <div class="bg-gray-100 p-4 rounded-lg mb-2">
+                    <h3 class="font-bold text-lg">
+                        {{ announcement.title }}
+                    </h3>
+                    <p class="text-gray-700 mb-2 whitespace-pre-line">
+                        {{ announcement.message }}
+                    </p>
+                    <hr class="text-gray-500"/>
+                    <p class="text-gray-500 text-sm">
+                        Posted on: {{ announcement.date_posted }}
+                    </p>
+                </div>
+                {% endfor %} {% endif %}
+            </div>
         </div>
     </div>
 </div>
