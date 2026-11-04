@@ -12,3 +12,4 @@ bcrypt # Password hashing
 cryptography # File encryption
 ghlinguist
 pycmarkgfm
+python-dotenv
