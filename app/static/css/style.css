@@ -305,17 +305,38 @@
   .h-screen {
     height: 100vh;
   }
+  .max-h-\[40vw\] {
+    max-height: 40vw;
+  }
+  .max-h-\[45vw\] {
+    max-height: 45vw;
+  }
   .max-h-\[50vh\] {
     max-height: 50vh;
   }
-  .max-h-\[70vh\] {
-    max-height: 70vh;
+  .max-h-\[50vm\] {
+    max-height: 50vm;
   }
-  .max-h-\[80vh\] {
-    max-height: 80vh;
+  .max-h-\[50vw\] {
+    max-height: 50vw;
   }
-  .max-h-\[90vh\] {
-    max-height: 90vh;
+  .max-h-\[60vh\] {
+    max-height: 60vh;
+  }
+  .max-h-\[75\%\] {
+    max-height: 75%;
+  }
+  .max-h-\[75vw\] {
+    max-height: 75vw;
+  }
+  .max-h-\[90\%\] {
+    max-height: 90%;
+  }
+  .max-h-\[100vw\] {
+    max-height: 100vw;
+  }
+  .max-h-\[120vw\] {
+    max-height: 120vw;
   }
   .max-h-screen {
     max-height: 100vh;
@@ -423,9 +444,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  .overflow-auto {
-    overflow: auto;
   }
   .overflow-x-auto {
     overflow-x: auto;
