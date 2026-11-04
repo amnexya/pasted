@@ -43,3 +43,11 @@ class Announcement(db.Model):
 
     def __repr__(self):
         return f"<Announcement {self.id}>"
+
+class BanList(db.Model):
+    __tablename__ = "banlist"
+
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(15), nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
+    reason = db.Column(db.String(512), nullable=False)
