@@ -98,6 +98,9 @@ if __name__ == "__main__":
             if host is None:
                 die("Something went wrong parsing your host. Please ensure it is an IPV4 address, and you have set it correctly. (Usage: -h 0.0.0.0, --host 127.0.0.1)")
 
+    if debug and host not in ("127.0.0.1", "localhost"):
+        die("Refusing to expose Werkzeug debugger on a non-loopback host, please set your host to 127.0.0.1")
+
     if os.geteuid() != 0 and port <= 1024:
         die("You are not root, any port under 1024 requires root, please run again as root or change your port with --port.")
 
