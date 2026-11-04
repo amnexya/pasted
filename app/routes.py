@@ -28,8 +28,7 @@ def index():
     quote, quote_author = worker.get_quote_from_db()
     announcements = worker.get_announcements()
 
-    resp = make_response(
-        render_template(
+    return render_template(
             "index.html",
             title="home",
             quote=quote,
@@ -37,12 +36,8 @@ def index():
             announcements=announcements,
             host=request.host,
             max_file_size=app.config["MAX_FILE_SIZE"],
-            version=app.config["VERSION"],
-        )
+            version=app.config["VERSION"]
     )
-    resp.set_cookie("browserIdent", "1")
-
-    return resp
 
 
 @app.route("/paste", methods=["GET", "POST"])
@@ -163,9 +158,12 @@ def paste(api=False):
 @app.route("/<filename>")  # type: ignore
 def view(filename):
     if request.method == "GET":
-        api = False if request.cookies.get("browserIdent") else True
         file = db.session.query(File).filter_by(filename=filename).first()
         key = fernet.Fernet(app.config["ENC_KEY"])
+
+        api = False
+        if "text/html" not in request.headers.get("Accept", ""):
+            api = True
 
         if file is None:
             flash("File not found, sorry.")
