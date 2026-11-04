@@ -93,12 +93,11 @@ def name_randomiser():
 
 
 def get_quote_from_db():
-    try:
-        quote = db.session.query(Quote).filter_by(id=random.randint(1, db.session.query(Quote).count())).first()
-        return quote.quote, quote.author  # type: ignore
-    except ValueError:
-        return "the quotes broke, i need to fix that!", "amnexya"
-
+    count = db.session.query(Quote).count()
+    if count == 0:
+        return "oops! quotes are broken. fixing it soon!", "amnexya"
+    quote = db.session.query(Quote).offset(random.randrange(count)).first()
+    return quote.quote, quote.author # type: ignore
 
 def get_announcements():
     try:
@@ -106,7 +105,7 @@ def get_announcements():
         return announcements
     except Exception as e:
         print(e)
-        return None
+        return []
 
 
 def is_markdown(filename, content):
