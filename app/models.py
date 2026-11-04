@@ -13,8 +13,7 @@ class File(db.Model):
     mime = db.Column(db.String(256), nullable=False)  # MIME type of the file
     sha256 = db.Column(db.String(64), nullable=False)  # SHA256 hash of the file
     private = db.Column(db.Boolean, nullable=False)  # Allow the file to be listed in the recent list or not
-    deleted = db.Column(db.Boolean, nullable=False)  # Soft delete flag
-
+    
     def __repr__(self):
         return f"<File {self.id}>"
 

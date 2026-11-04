@@ -63,103 +63,101 @@ def paste(api=False):
     if detect:
         return "Bot traffic detected. Bots are not permitted to upload to pasted.sh", 403
 
-    try:
-        # Determine whether we have text or a file
-        uploaded_file = request.files.get("file")
-        uploaded_text = request.form.get("file")
+    # Determine whether we have text or a file
+    uploaded_file = request.files.get("file")
+    uploaded_text = request.form.get("file")
 
-        # Change it to a filestorage object so we can work with it the same way as uploaded files.
-        if uploaded_text:
-            current_file = FileStorage(
-                stream=io.BytesIO(uploaded_text.encode()),
-                filename='p.txt',
-                content_type="text/plain" # force text/plain
-            )
-
-        elif uploaded_file:
-            current_file = uploaded_file
-
-        else:
-            flash("No file or text provided.")
-            return redirect(url_for("index"))
-
-        # Clear these variables to save memory
-        del uploaded_file
-        del uploaded_text
-
-        mgmt = worker.create_mgmt_token()
-
-        mime = Magic(mime=True).from_buffer(current_file.stream.read(2048))  # try and get mimetype
-        current_file.stream.seek(0)  # Reset the stream position after reading for magic
-
-        ext = current_file.filename.split(".")[-1]  # type: ignore
-
-        if ext == "":
-            ext = "bin"  # Default to bin if no extension provided, just to be safe.
-
-        # find usable filename
-        c = 0 # counter for max retries
-        while True:
-            filename = worker.name_randomiser() + "." + ext  # Just in case, we dont want any funny business with the filename.
-            if c < 128 and db.session.query(File).filter_by(filename=filename).first() is None:
-                break
-            elif c >= 128:
-                return f"""We couldn't find you a filename, it's possible that pasted may have run out of, or be close to running out of 4 character file names. 
-                Please E-mail {app.config['SITE_ADMIN']} and say you got this message.""", 500
-            else:
-                c+=1
-
-
-        filesize = current_file.seek(0, os.SEEK_END)
-        current_file.seek(0)
-
-        # Check if file should be made private
-        private = False
-        if request.form.get("private"):
-            private = True
-
-        # encrypt the file
-        encrypted_content = key.encrypt(current_file.read())
-
-        # save the encrypted content to a filestorage object
+    # Change it to a filestorage object so we can work with it the same way as uploaded files.
+    if uploaded_text:
         current_file = FileStorage(
-            stream=io.BytesIO(encrypted_content),
-            filename=current_file.filename,
-            content_type=current_file.content_type,
-        )
-        current_file.seek(0)
-
-        # We will save the file before we add it to the db,
-        # it'll get cleaned up if the upload fails.
-        worker.save_file(current_file, filename)
-
-        ok = worker.create_db_entry(
-            request.remote_addr,  # IP
-            datetime.datetime.now(),  # Date
-            filename,  # Filename
-            worker.generate_hash(mgmt),  # Hash mgmt token
-            filesize,  # Size
-            mime,  # MimeType
-            worker.sha256gen(current_file),  # SHA256
-            private,  # Exclude from recent
-            False,
+            stream=io.BytesIO(uploaded_text.encode()),
+            filename='p.txt',
+            content_type="text/plain" # force text/plain
         )
 
-        current_file.close()
+    elif uploaded_file:
+        current_file = uploaded_file
 
-        if not ok:
-            os.remove(os.path.join(app.config["LOCAL_DATA"], filename))
-            return "Sorry, upload failed. Please try again later", 500
-
-        if api:
-            return {"mgmt": mgmt, "filename": filename}
-        else:
-            return render_template(
-                "success.html", mgmt=mgmt, filename=filename, host=request.host
-            )
-    except RequestEntityTooLarge:
-        flash("File too large, try something smaller.")
+    else:
+        flash("No file or text provided.")
         return redirect(url_for("index"))
+
+    # Clear these variables to save memory
+    del uploaded_file
+    del uploaded_text
+
+    mgmt = worker.create_mgmt_token()
+
+    mime = Magic(mime=True).from_buffer(current_file.stream.read(2048))  # try and get mimetype
+    current_file.stream.seek(0)  # Reset the stream position after reading for magic
+
+    ext = current_file.filename.split(".")[-1]  # type: ignore
+
+    if ext == "":
+        ext = "bin"  # Default to bin if no extension provided, just to be safe.
+
+    # find usable filename
+    c = 0 # counter for max retries
+    while True:
+        filename = worker.name_randomiser() + "." + ext  # Just in case, we dont want any funny business with the filename.
+        if c < 128 and db.session.query(File).filter_by(filename=filename).first() is None:
+            break
+        elif c >= 128:
+            return f"""We couldn't find you a filename, it's possible that pasted may have run out of, or be close to running out of 4 character file names. 
+            Please E-mail {app.config['SITE_ADMIN']} and say you got this message.""", 500
+        else:
+            c+=1
+
+
+    filesize = current_file.seek(0, os.SEEK_END)
+    current_file.seek(0)
+
+    # Check if file should be made private
+    private = False
+    if request.form.get("private"):
+        private = True
+
+    sha256 = worker.sha256gen(current_file)
+
+    # encrypt the file
+    encrypted_content = key.encrypt(current_file.read())
+
+    # save the encrypted content to a filestorage object
+    current_file = FileStorage(
+        stream=io.BytesIO(encrypted_content),
+        filename=current_file.filename,
+        content_type=current_file.content_type,
+    )
+    current_file.seek(0)
+
+    # We will save the file before we add it to the db,
+    # it'll get cleaned up if the upload fails.
+    worker.save_file(current_file, filename)
+
+    ok = worker.create_db_entry(
+        request.remote_addr,  # IP
+        datetime.datetime.now(),  # Date
+        filename,  # Filename
+        worker.generate_hash(mgmt),  # Hash mgmt token
+        filesize,  # Size
+        mime,  # MimeType
+        sha256,  # SHA256
+        private,  # Exclude from recent
+        False,
+    )
+
+    current_file.close()
+
+    if not ok:
+        os.remove(os.path.join(app.config["LOCAL_DATA"], filename))
+        return "Sorry, upload failed. Please try again later", 500
+
+    if api:
+        return {"mgmt": mgmt, "filename": filename}
+    else:
+        return render_template(
+            "success.html", mgmt=mgmt, filename=filename, host=request.host
+        )
 
 
 @app.route("/<filename>")  # type: ignore
@@ -228,7 +226,7 @@ def serve_file(filename):
     file = db.session.query(File).filter_by(filename=filename).first()
     key = fernet.Fernet(app.config["ENC_KEY"])
 
-    if file is None or file.deleted:
+    if file is None:
         flash("File not found, sorry.")
         return redirect(url_for("index"))
 
@@ -260,8 +258,8 @@ def serve_file(filename):
 @app.route("/delete", methods=["GET", "POST"])
 def delete():
     if request.method == "POST":
-        name = request.form["name"].strip()
-        mgmt_token = request.form["mgmt_token"].strip()
+        name = request.form.get("name", "").strip()
+        mgmt_token = request.form.get("mgmt", "").strip()
 
         file = db.session.query(File).filter_by(filename=name).first()
 
@@ -270,9 +268,9 @@ def delete():
             return redirect(url_for("index"))
 
         if worker.check_hash(mgmt_token, file.mgmt):
-            db.session.delete(file)
             os.remove(os.path.join(app.config['LOCAL_DATA'], name))
             db.session.commit()
+            db.session.delete(file)
             flash("File deleted.")
             return redirect(url_for("index"))
         else:
@@ -298,3 +296,16 @@ def tos():
 @app.route("/privacy")
 def privacy():
     return render_template("privacy.html", title="Privacy Policy")
+
+# handlers
+
+@app.errorhandler(RequestEntityTooLarge)
+def too_large(e):
+    flash("File too large, try something smaller.")
+    return redirect(url_for("index"))
+
+@app.after_request
+def security_headers(resp):
+    resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resp.headers.setdefault("Referrer-Policy", "same-origin")
+    return resp

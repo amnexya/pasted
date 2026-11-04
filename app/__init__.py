@@ -99,45 +99,23 @@ if not os.path.exists(app.config['LOCAL_DATA']):
         die(f"Unable to write to {app.config['LOCAL_DATA']}, please check if the path exists, and your user has the correct permissions and try again.")
 
 info("Starting database")
+# pauses occasionally to wait for db to start
+try:
+    db = SQLAlchemy(app)
+    sleep(1)
 
-# loop to account for docker delays on starting db
-tries=0
-max_tries=5
-db=None
-migrate=None
-while True:
-    try:
-        # loop 5 times, then give up
-        info(f"Attempt {tries+1} to connect.")
-        sleep(0.5)
- 
-        db = SQLAlchemy(app)
-        sleep(1)
-        
-        migrate = Migrate(app, db)
-        sleep(1)
+    migrate = Migrate(app, db)
+    sleep(1)
 
-        # update db
-        # same as running flask init, upgrade, and migrate all in one.
-        info("Updating DB if needed")
-        from app.models import File
-        with app.app_context():
-            db.create_all()
-
-        break
-
-    except Exception as e:
-        if tries <= max_tries:
-            db=None
-            migrate=None
-            warn(e) # type: ignore
-            tries+=1
-            continue
-        else:
-            # die if something broke
-            print(e)
-            print(app.config["DB_URI"])
-            die("Database couldn't start, check your database_uri is correct.")
-
+    # update db
+    # same as running flask init, upgrade, and migrate all in one.
+    info("Updating DB if needed")
+    from app.models import File
+    with app.app_context():
+        db.create_all()
+except Exception as e:
+    # die if something broke
+    print(e)
+    die("Database couldn't start, check your database_uri is correct.")
 
 from app import routes, models
