@@ -8,5 +8,6 @@ instance
 *.pyc
 pasted.toml
 key.txt
+.env
 # for testing
 data

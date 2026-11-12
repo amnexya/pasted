@@ -16,6 +16,9 @@
         <h1 class="text-2xl font-bold">{{filename}}</h1>
         <p class="text-sm text-gray-600">{{mime}}</p>
         <p class="text-sm text-gray-600 mb-4">{{ filesize }} bytes</p>
+        {% if truncated %}
+        <p class="bg-yellow-400 p-2 rounded-lg mb-2">This file is large, so only the first 1 MB is shown. Download it for the full file.</p>
+        {% endif %}
         {% if view is true %}
             {% if is_markdown is true %}
             <div class="bg-gray-100 p-4 rounded-lg overflow-x-auto whitespace-pre-wrap md">{{content|safe}}</div>
@@ -41,7 +44,7 @@
         <p>Unfortunately, this file can't be viewed in your browser, please download it instead.</p>
         {% endif %}
         <br>
-        <a href="{{url}}" download="FileName" class="text-white hover:text-gray-100 bg-blue-500 hover:bg-blue-600 rounded-lg p-2">Download</a>
+        <a href="{{url}}" class="text-white hover:text-gray-100 bg-blue-500 hover:bg-blue-600 rounded-lg p-2">Download</a>
         <a href="/" class="text-blue-500 hover:text-blue-600">Home</a>
     </div>
 </div>

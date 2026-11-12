@@ -1,64 +1,86 @@
 #!/usr/bin/env python3
+import os, sys, time
+from app import app, db, die, warn
+from app.models import File
 
-import os
-
-import tomllib
-
-from app import app, models
-
-
-def load_cfg():
-    """Load the configuration from the config.toml file."""
-    while True:
-        if not os.path.exists(os.getcwd() + "/pasted.toml") and not os.path.exists(
-            os.path.expanduser("~/.config/pasted.toml")
-        ):
-            cfg_path = input(
-                "Config file not found in current directory, please enter absolute path to your config file: "
-            )
-        elif not os.path.exists(os.getcwd() + "/pasted.toml"):
-            cfg_path = os.path.expanduser("~/.config/pasted.toml")
-        else:
-            cfg_path = os.getcwd() + "/pasted.toml"
-
-        print("-- Got config file at " + cfg_path + " --")
-
-        # Check if file selected is valid
-        with open(cfg_path, "rb") as f:
-            try:
-                cfg = tomllib.load(f)
-                return cfg
-            except Exception as e:
-                print(f"Error loading config file: {e}")
-                continue
-
+GRACE_SECONDS = 600     # skip anything newer than this, it may be mid-upload
+MAX_FRACTION = 0.05     # abort if we'd remove more than this fraction of files/rows
+MIN_ALLOWED = 5         # always allow a handful, so tiny sites arent stuck
 
 def main():
-    # start db
+    dry_run = "--dry-run" in sys.argv
+    force = "--force" in sys.argv
     app.app_context().push()
+    data_dir = app.config["LOCAL_DATA"]
 
-    cfg = load_cfg()
+    in_db = {f.filename for f in File.query.all()}
+    local = {f for f in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, f)) and not f.startswith(".")}
 
-    # Get local files
-    files = os.listdir(cfg["local_data"])
-    print("Local files found are " + ", ".join(files))
+    if force:
+        warn("Running with --force ignores all warnings, and can result in your DB or storage directory being fully wiped. Do you still want to run? (y/N)\n")
+        while True:
+            c = input()
+            if c.lower() == "y":
+                break
+            elif c.lower() == "n":
+                sys.exit()
+            else:
+                print("Unknown value, please answer with 'y' or 'n'.")
 
-    # Get db files
-    db_files = [f.filename for f in models.File.query.all()]
-    print("DB files found are " + ", ".join(db_files))
+    if in_db and not local and not force and not dry_run:
+        die(f"{data_dir} is empty but the DB has {len(in_db)} files - is the storage mounted? Aborting. Run with --force to ignore this warning.\n")
+    if local and not in_db and not force and not dry_run:
+        die(f"DB is empty but {data_dir} has {len(local)} files - not continuing out of caution. Run with --force to ignore this warning.\n")
 
-    # Compare lists
-    if [f for f in files if f not in db_files]:
-        print("-- DISCREPANIES FOUND: Files not in DB but are in local. --")
-        print([f for f in files if f not in db_files])
-        print("Fixing discrepancies...")
-        # get list of files not in db
-        for f in [f for f in files if f not in db_files]:
-            print("Removing file " + f + " from local...")
-            os.remove(os.path.join(cfg["local_data"], f))
-    else:
-        print("-- No discrepancies found, files and DB are clean. --")
+    now = time.time()
 
+    # files on disk with no DB entry
+    orphan_files = []
+    for f in sorted(local - in_db):
+        try:
+            age = now - os.path.getmtime(os.path.join(data_dir, f))
+        except FileNotFoundError:           # vanished since we listed it
+            continue
+        if age >= GRACE_SECONDS:            # young ones are probably mid-upload
+            orphan_files.append(f)
+
+    # DB entries with no file on disk
+    orphan_rows = []
+    for f in sorted(in_db - local):
+        row = db.session.query(File).filter_by(filename=f).first()      # get db row
+        if row is None:                                                 # deleted by someone else since we listed
+            continue
+        if now - row.date.timestamp() >= GRACE_SECONDS:                 # datetime -> number so it can be compared
+            orphan_rows.append(row)                                     # young ones were probably only just uploaded
+
+    # one check, before anything gets removed, against the totals
+    if not force and not dry_run:
+        if len(orphan_files) > max(MIN_ALLOWED, len(local) * MAX_FRACTION):
+            die(f"Would remove {len(orphan_files)} of {len(local)} files (more than {MAX_FRACTION:.0%}). Not continuing. Run with --force to ignore this warning.\n")
+        if len(orphan_rows) > max(MIN_ALLOWED, len(in_db) * MAX_FRACTION):
+            die(f"Would remove {len(orphan_rows)} of {len(in_db)} DB rows (more than {MAX_FRACTION:.0%}). Not continuing. Run with --force to ignore this warning.\n")
+
+    for f in orphan_files:
+        if dry_run:
+            print(f"Would remove orphan file {f}")
+            continue
+        print(f"Removing orphan file {f}")
+        try:
+            os.remove(os.path.join(data_dir, f))
+        except FileNotFoundError:           # already gone, which is what we wanted anyway
+            pass
+
+    for row in orphan_rows:
+        if dry_run:
+            print(f"Would remove orphan DB entry {row.filename}")
+            continue
+        print(f"Removing orphan DB entry {row.filename}")
+        db.session.delete(row)
+
+    if not dry_run:
+        db.session.commit()
+
+    print(f"{'Dry run: ' if dry_run else ''}{len(orphan_files)} orphan files, {len(orphan_rows)} orphan DB entries.")
 
 if __name__ == "__main__":
     main()

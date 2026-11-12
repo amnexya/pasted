@@ -5,9 +5,11 @@
         <link rel="stylesheet" href="/static/css/style.css" />
         <link rel="stylesheet" href="/static/js/styles/default.min.css" />
         <script src="/static/js/highlight.min.js"></script>
+        {% if is_markdown is false %}
         <script>
             hljs.highlightAll();
         </script>
+        {% endif %}
 
         <!-- Social media embeds -->
         <meta property="og:title" content="pasted.sh - {{title}}" />
@@ -17,7 +19,7 @@
         {% if filetype == "image" %}
         <meta property="og:image" content="{{url}}" />
         <meta property="twitter:card" content="{{url}}" />
-        " {% elif filetype == "video" %}
+        {% elif filetype == "video" %}
         <meta property="og:video" content="{{url}}" />
         {% elif filetype == "audio" %}
         <meta property="og:audio" content="{{url}}" />
