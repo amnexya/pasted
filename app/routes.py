@@ -150,7 +150,7 @@ def view(filename):
         if "text/html" not in request.headers.get("Accept", ""):
             api=True
 
-        if file is None:
+        if file is None or file.filename != filename:
             return "File not found.", 404
 
         filesize = file.size
@@ -239,7 +239,7 @@ def serve_file(filename):
     """Serve encrypted files by decrypting and streaming them."""
     file = db.session.query(File).filter_by(filename=filename).first()
 
-    if file is None:
+    if file is None or file.filename != filename:
         return "File not found.", 404
 
     key = fernet.Fernet(app.config["ENC_KEY"])
@@ -316,7 +316,7 @@ def delete():
 
         file = db.session.query(File).filter_by(filename=name).first()
 
-        if file is None:
+        if file is None or file.filename != name:       # accounts for capitalization changes
             return "File not found", 404
 
         if worker.check_hash(mgmt_token, file.mgmt):
