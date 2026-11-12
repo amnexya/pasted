@@ -77,13 +77,13 @@ def check_hash(str_hash, hashed):
     return bcrypt.checkpw(str_hash.encode("utf-8"), hashed.encode("utf-8"))
 
 
-def name_randomiser():
+def name_randomiser(k=4):
     """Create a random name for a file.
 
     Returns:
         str: Random filename.
     """
-    return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=4))
+    return "".join(random.choices("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", k=k))
 
 
 def get_quote_from_db():
@@ -240,3 +240,10 @@ def dec_stream(src, fernet):
 
         yield data                                      # hand back just the data, not the header
         index += 1
+
+def shard_path(filename):
+    """Avoid the 10,000 files per directory limit pixeldrain has.
+
+    First two characters become nested directories, e.g. hKLz.txt becomes <LOCAL_DATA>/h/K/hKLz.txt
+    """
+    return os.path.join(app.config['LOCAL_DATA'], filename[0], filename[1], filename)

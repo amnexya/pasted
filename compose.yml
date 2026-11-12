@@ -7,7 +7,7 @@ services:
       - "127.0.0.1:5000:80" # Only reachable via nginx on this host (Docker ports bypass ufw)
     env_file: .env # Pass through .env
     volumes:
-      - /srv/pasted:/srv/pasted
+      - /srv/pasted:/srv/pasted:z
     restart: unless-stopped
     depends_on: # Wait until MariaDB is actually accepting connections, not just started
       db:

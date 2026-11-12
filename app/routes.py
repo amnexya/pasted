@@ -87,8 +87,12 @@ def paste(api=False):
     # Get a free filename
     # (tell the user to email me if it cant find one)
     for _ in range(128):
-        filename = f"{worker.name_randomiser()}.{ext}"
-        path = os.path.join(app.config["LOCAL_DATA"], filename)
+        if private:
+            filename = f"{worker.name_randomiser(16)}.{ext}" # extend filename if private so its harder to guess
+        else:
+            filename = f"{worker.name_randomiser(4)}.{ext}"
+        path = worker.shard_path(filename)                  # path sharding stuff, avoids file limit
+        os.makedirs(os.path.dirname(path), exist_ok=True)   # make shard dirs if they don't exist
 
         try:
             dst = open(path, "xb")
@@ -126,7 +130,7 @@ def paste(api=False):
     current_file.close()
 
     if not ok:
-        os.remove(os.path.join(app.config["LOCAL_DATA"], filename))
+        os.remove(worker.shard_path(filename))
         return "Upload failed. Please try again later.", 500
 
     if api:
@@ -167,7 +171,7 @@ def view(filename):
         truncated = False
         try:
             if filetype == "text":
-                with open(os.path.join(app.config["LOCAL_DATA"], filename), "rb") as f:
+                with open(worker.shard_path(filename), "rb") as f:
                     # get header, we need to check whether this is new or old style file encryption
                     header = f.read(4)
                     f.seek(0)
@@ -250,7 +254,7 @@ def serve_file(filename):
 
     f = None
     try:
-        f = open(os.path.join(app.config["LOCAL_DATA"], filename), "rb")
+        f = open(worker.shard_path(filename), "rb")
 
         # get header, we need to check whether this is new or old style file encryption
         header = f.read(4)
@@ -319,7 +323,7 @@ def delete():
             db.session.delete(file)
             db.session.commit()
             try:
-                os.remove(os.path.join(app.config["LOCAL_DATA"], name))
+                os.remove(worker.shard_path(name))
             except FileNotFoundError:
                 pass
                 return "Could not remove file, file is not present on local storage directory, removed from DB."
